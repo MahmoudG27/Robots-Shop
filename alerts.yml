@@ -1,0 +1,171 @@
+groups:
+  - name: robot_shop_alerts
+    interval: 30s
+    rules:
+      # ==================== CATALOGUE ALERTS ====================
+      - alert: CatalogueDown
+        expr: up{job="catalogue"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: catalogue
+        annotations:
+          summary: "Catalogue service is down"
+          description: "Catalogue service has been down for more than 2 minutes"
+
+      - alert: CatalogueHighErrorRate
+        expr: rate(http_requests_total{job="catalogue",status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: catalogue
+        annotations:
+          summary: "Catalogue high error rate"
+          description: "Error rate is above 5%"
+
+      # ==================== CART ALERTS ====================
+      - alert: CartDown
+        expr: up{job="cart"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: cart
+        annotations:
+          summary: "Cart service is down"
+          description: "Cart service has been down for more than 2 minutes"
+
+      - alert: CartHighErrorRate
+        expr: rate(http_requests_total{job="cart",status=~"5.."}[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          service: cart
+        annotations:
+          summary: "Cart high error rate"
+          description: "Error rate is above 5%"
+
+      # ==================== USER ALERTS ====================
+      - alert: UserDown
+        expr: up{job="user"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: user
+        annotations:
+          summary: "User service is down"
+          description: "User service has been down for more than 2 minutes"
+
+      # ==================== PAYMENT ALERTS ====================
+      - alert: PaymentDown
+        expr: up{job="payment"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: payment
+        annotations:
+          summary: "Payment service is down"
+          description: "Payment service has been down for more than 2 minutes"
+
+      - alert: PaymentHighErrorRate
+        expr: rate(http_requests_total{job="payment",status=~"5.."}[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: critical
+          service: payment
+        annotations:
+          summary: "Payment high error rate"
+          description: "Payment error rate is critically high (>10%)"
+
+      # ==================== SHIPPING ALERTS ====================
+      - alert: ShippingDown
+        expr: up{job="shipping"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: shipping
+        annotations:
+          summary: "Shipping service is down"
+          description: "Shipping service has been down for more than 2 minutes"
+
+      # ==================== DISPATCH ALERTS ====================
+      - alert: DispatchDown
+        expr: up{job="dispatch"} == 0
+        for: 2m
+        labels:
+          severity: critical
+          service: dispatch
+        annotations:
+          summary: "Dispatch service is down"
+          description: "Dispatch service has been down for more than 2 minutes"
+
+      # ==================== DATABASE ALERTS ====================
+      - alert: MongoDBDown
+        expr: up{job="mongodb"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: mongodb
+        annotations:
+          summary: "MongoDB is down"
+          description: "MongoDB database is not responding"
+
+      - alert: MySQLDown
+        expr: up{job="mysql"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: mysql
+        annotations:
+          summary: "MySQL is down"
+          description: "MySQL database is not responding"
+
+      - alert: RedisDown
+        expr: up{job="redis"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: redis
+        annotations:
+          summary: "Redis is down"
+          description: "Redis cache is not responding"
+
+      # ==================== MESSAGE QUEUE ALERTS ====================
+      - alert: RabbitMQDown
+        expr: up{job="rabbitmq"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: rabbitmq
+        annotations:
+          summary: "RabbitMQ is down"
+          description: "RabbitMQ message broker is not responding"
+
+      # ==================== PROMETHEUS ALERTS ====================
+      - alert: PrometheusDown
+        expr: up{job="prometheus"} == 0
+        for: 1m
+        labels:
+          severity: warning
+          component: prometheus
+        annotations:
+          summary: "Prometheus is down"
+          description: "Prometheus monitoring system is not responding"
+
+      # ==================== GENERAL SYSTEM ALERTS ====================
+      - alert: HighMemoryUsage
+        expr: container_memory_usage_bytes / 1e6 > 800
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage detected"
+          description: "Container memory usage is above 800MB"
+
+      - alert: PrometheusScrapeFailing
+        expr: rate(prometheus_tsdb_symbol_table_size_bytes[5m]) == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus scrape is failing"
+          description: "Prometheus hasn't scraped metrics for 15 minutes"

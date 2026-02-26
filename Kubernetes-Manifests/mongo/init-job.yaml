@@ -1,0 +1,46 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mongo-init
+spec:
+  backoffLimit: 3
+  template:
+    spec:
+      restartPolicy: OnFailure
+      containers:
+        - name: mongo-init
+          image: mongo:7.0
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for MongoDB..."
+              until mongosh --host mongodb-0.mongodb:27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                sleep 2
+              done
+
+              echo "Running init scripts..."
+              mongosh --host mongodb-0.mongodb:27017 /scripts/users.js
+              mongosh --host mongodb-0.mongodb:27017 /scripts/catalogue.js
+
+              echo "Mongo init completed"
+          volumeMounts:
+            - name: scripts
+              mountPath: /scripts
+      volumes:
+        - name: scripts
+          configMap:
+            name: mongo-init-scripts
+
+
+# How many times does this job run?
+# -> Only once.
+
+# If you try to run it again:
+# -> It will duplicate keys
+# -> Or it will fail due to unique indexes.
+
+# If you need to start over:
+# kubectl delete job mongo-init
+# kubectl delete pvc mongo-data-mongodb-0
+# kubectl apply -f mongo-init-job.yaml

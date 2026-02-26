@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-init-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysql-init-container
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: root-password
+        - name: MYSQL_RATINGS_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: ratings-password
+        - name: MYSQL_HOST
+          value: "mysql"
+        - name: MYSQL_USER
+          value: "ratings"
+        - name: MYSQL_PORT
+          value: "3306"
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          mysql -h${MYSQL_HOST} -P${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} <<EOF
+          CREATE DATABASE IF NOT EXISTS ratings;
+          CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_AUTH_PASSWORD}';
+          GRANT ALL PRIVILEGES ON ratings.* TO '${MYSQL_USER}'@'%';
+          FLUSH PRIVILEGES;
+          USE ratings;
+          CREATE TABLE IF NOT EXISTS ratings (
+            sku VARCHAR(80) NOT NULL,
+            avg_rating DECIMAL(3,2) NOT NULL,
+            rating_count INT NOT NULL,
+            PRIMARY KEY (sku)
+          ) ENGINE=InnoDB;
+          EOF
+      restartPolicy: OnFailure

@@ -1,0 +1,21 @@
+DirectoryIndex index.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Allow metrics & server-status directly
+    RewriteCond %{REQUEST_URI} !^/metrics\.php$
+    RewriteCond %{REQUEST_URI} !^/server-status$
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [L]
+</IfModule>
+
+# Security hardening
+<FilesMatch "\.(env|log|ini|yml|yaml|json|lock)$">
+    Require all denied
+</FilesMatch>
+
+<Files "metrics.php">
+    Require all granted
+</Files>

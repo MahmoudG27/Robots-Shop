@@ -1,0 +1,22 @@
+{
+  "name": "catalogue",
+  "version": "1.0.0",
+  "description": "product catalogue REST API",
+  "type": "commonjs",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "author": "MG",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "express": "^4.19.2",
+    "mongodb": "^6.5.0",
+    "pino": "^9.0.0",
+    "express-pino-logger": "^7.0.0",
+    "prom-client": "^15.1.0"
+  }
+}
