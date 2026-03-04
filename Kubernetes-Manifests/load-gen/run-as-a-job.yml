@@ -1,0 +1,30 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: loadgen
+spec:
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: loadgen
+          image: containerregistryrobots.azurecr.io/rs-load:v1.0.0
+          env:
+            - name: HOST
+              value: "http://web:8080"
+            - name: NUM_CLIENTS
+              value: "5"
+            - name: RUN_TIME
+              value: "5m"
+            - name: SILENT
+              value: "0"
+            - name: ERROR
+              value: "0"
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
