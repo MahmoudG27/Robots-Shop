@@ -1,0 +1,305 @@
+version: '3.8'
+
+services:
+  # Infrastructure Services
+  mongodb:
+    image: mongo:7-alpine
+    container_name: mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - microservices
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  mysql:
+    build: ./mysql
+    image: robots/mysql:latest
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpass123
+      MYSQL_DATABASE: cities
+      MYSQL_USER: shipping
+      MYSQL_PASSWORD: shipping123
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - microservices
+    healthcheck:
+      test: mysqladmin ping -h localhost -u shipping -pshipping123
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    command: --default-authentication-plugin=mysql_native_password
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices
+    healthcheck:
+      test: redis-cli ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - microservices
+    healthcheck:
+      test: rabbitmq-diagnostics ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # Microservices
+  catalogue:
+    build: ./catalogue
+    image: robots/catalogue:latest
+    container_name: catalogue
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://admin:admin123@mongodb:27017/catalogue?authSource=admin
+      CATALOGUE_SERVER_PORT: 8080
+      GO_SLOW: "0"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: wget -qO- http://localhost:8080/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  user:
+    build: ./user
+    image: robots/user:latest
+    container_name: user
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://admin:admin123@mongodb:27017/users?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: wget -qO- http://localhost:8080/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  cart:
+    build: ./cart
+    image: robots/cart:latest
+    container_name: cart
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      CATALOGUE_HOST: catalogue
+      CATALOGUE_PORT: "8080"
+      CART_SERVER_PORT: 8080
+    depends_on:
+      redis:
+        condition: service_healthy
+      catalogue:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: wget -qO- http://localhost:8080/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  payment:
+    build: ./payment
+    image: robots/payment:latest
+    container_name: payment
+    environment:
+      FLASK_ENV: production
+      CART_HOST: cart
+      CART_PORT: "8080"
+      USER_HOST: user
+      USER_PORT: "8080"
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: "5672"
+      AMQP_USER: guest
+      AMQP_PASS: guest
+      PAYMENT_GATEWAY: https://sandbox.paypal.com/
+      PAYMENT_DELAY_MS: "0"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      cart:
+        condition: service_healthy
+      user:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: curl -f http://localhost:8080/ || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  shipping:
+    build: ./shipping
+    image: robots/shipping:latest
+    container_name: shipping
+    environment:
+      JAVA_OPTS: "-XX:MaxRAMPercentage=75"
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: cities
+      DB_USER: shipping
+      DB_PASSWORD: shipping123
+      CART_ENDPOINT: http://cart:8080
+    depends_on:
+      mysql:
+        condition: service_healthy
+      cart:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: curl -f http://localhost:8080/ || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  ratings:
+    build: ./ratings
+    image: robots/ratings:latest
+    container_name: ratings
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DB: ratings
+      MYSQL_USER: ratings
+      MYSQL_PASSWORD: ratings123
+      CATALOGUE_URL: http://catalogue:8080
+      APP_ENV: prod
+    depends_on:
+      redis:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      catalogue:
+        condition: service_healthy
+    networks:
+      - microservices
+    healthcheck:
+      test: curl -f http://localhost/ || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  dispatch:
+    build: ./dispatch
+    image: robots/dispatch:latest
+    container_name: dispatch
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: "5672"
+      AMQP_USER: guest
+      AMQP_PASS: guest
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  web:
+    build: ./web
+    image: robots/web:latest
+    container_name: web
+    ports:
+      - "80:8080"
+    environment:
+      CART_HOST: cart
+      CATALOGUE_HOST: catalogue
+      USER_HOST: user
+      PAYMENT_HOST: payment
+      SHIPPING_HOST: shipping
+      RATINGS_HOST: ratings
+    depends_on:
+      cart:
+        condition: service_healthy
+      catalogue:
+        condition: service_healthy
+      user:
+        condition: service_healthy
+      payment:
+        condition: service_healthy
+      shipping:
+        condition: service_healthy
+      ratings:
+        condition: service_healthy
+    networks:
+      - microservices
+
+  # Optional: Load testing service
+  load-gen:
+    build: ./load-gen
+    image: robots/load-gen:latest
+    container_name: load-gen
+    environment:
+      HOST: http://web:8080
+      SILENT: "1"
+      NUM_CLIENTS: "10"
+      RUN_TIME: "600"
+    depends_on:
+      - web
+    networks:
+      - microservices
+    profiles:
+      - testing
+
+networks:
+  microservices:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
