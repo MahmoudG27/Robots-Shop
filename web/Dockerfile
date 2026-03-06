@@ -1,23 +1,17 @@
 FROM nginx:1.25-alpine
 
-# Security: non-root user
-RUN addgroup -S nginx && adduser -S nginx -G nginx
+WORKDIR /app
 
-# Remove default config
+RUN apk add --no-cache bash curl
+
 RUN rm /etc/nginx/conf.d/default.conf
-
-# Copy configs & static files
+COPY nginx.conf /etc/nginx/nginx.conf
 COPY default.conf.template /etc/nginx/templates/default.conf.template
-COPY static /usr/share/nginx/html
 COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Permissions
-RUN chmod +x /entrypoint.sh \
-    && chown -R nginx:nginx /usr/share/nginx/html
-
-USER nginx
+COPY static /usr/share/nginx/html
 
 EXPOSE 8080
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["nginx", "-g", "daemon off;"]

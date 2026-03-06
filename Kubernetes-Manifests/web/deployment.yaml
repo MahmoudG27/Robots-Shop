@@ -17,7 +17,6 @@ spec:
       containers:
       - name: web
         image: containerregistryrobots.azurecr.io/web:v1.0.0
-        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 8080
         env:
@@ -33,14 +32,21 @@ spec:
           value: payment
         - name: RATINGS_HOST
           value: ratings
+
         resources:
-          limits:
-            cpu: 200m
-            memory: 100Mi
           requests:
             cpu: 100m
-            memory: 50Mi
+            memory: 100Mi
+          limits:
+            cpu: 300m
+            memory: 200Mi
+
         livenessProbe:
           httpGet:
-            path: /health
+            path: /nginx_status
+            port: 8080
+
+        readinessProbe:
+          httpGet:
+            path: /nginx_status
             port: 8080

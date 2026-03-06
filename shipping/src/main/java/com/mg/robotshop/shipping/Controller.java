@@ -17,7 +17,7 @@ public class ShippingController {
     private static final Logger logger = LoggerFactory.getLogger(ShippingController.class);
 
     private final String cartUrl =
-            "http://" + System.getenv().getOrDefault("CART_ENDPOINT", "cart") + "/shipping/";
+        "http://" + System.getenv().getOrDefault("CART_ENDPOINT", "cart") + ":8080/shipping/";
 
     private static final List<byte[]> bytesGlobal =
             Collections.synchronizedList(new ArrayList<>());
