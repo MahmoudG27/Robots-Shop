@@ -270,23 +270,6 @@ services:
     networks:
       - microservices
 
-  # Optional: Load testing service
-  load-gen:
-    build: ./load-gen
-    image: robots/load-gen:latest
-    container_name: load-gen
-    environment:
-      HOST: http://web:8080
-      SILENT: "1"
-      NUM_CLIENTS: "10"
-      RUN_TIME: "600"
-    depends_on:
-      - web
-    networks:
-      - microservices
-    profiles:
-      - testing
-
 networks:
   microservices:
     driver: bridge
