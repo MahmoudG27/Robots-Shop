@@ -139,7 +139,27 @@ app.post('/shipping/:id', async (req, res) => {
     const cart = JSON.parse(data);
     // Add shipping information to cart
     cart.shipping = req.body;
-    
+
+    const shippingItem = {
+      qty: 1,
+      sku: 'SHIP',
+      name: 'Shipping',
+      price: req.body.cost || 0,
+      subtotal: req.body.cost || 0
+    };
+
+    const existing = cart.items.find(i => i.sku === 'SHIP');
+    if (existing) {
+      existing.price = shippingItem.price;
+      existing.subtotal = shippingItem.subtotal;
+    } else {
+      cart.items = cart.items || [];
+      cart.items.push(shippingItem);
+    }
+
+    cart.total = calcTotal(cart.items);
+    cart.tax = calcTax(cart.total);
+
     await saveCart(req.params.id, cart);
     res.json(cart);
   } catch (err) {
