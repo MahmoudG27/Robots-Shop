@@ -9,7 +9,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: loadgen
-          image: containerregistryrobots.azurecr.io/rs-load:v1.0.0
+          image: containerregistryrobots.azurecr.io/load-gen:v1.0.0
           env:
             - name: HOST
               value: "http://web:8080"
