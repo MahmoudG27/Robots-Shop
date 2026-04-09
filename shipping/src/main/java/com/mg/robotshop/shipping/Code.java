@@ -14,7 +14,7 @@ import javax.persistence.Id;
 public class Code {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long uuid;
 
     private String code;

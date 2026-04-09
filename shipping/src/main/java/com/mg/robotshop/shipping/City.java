@@ -15,7 +15,7 @@ import javax.persistence.Column;
 public class City {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long uuid;
 
     @Column(name = "country_code")

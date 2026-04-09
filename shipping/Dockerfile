@@ -17,7 +17,7 @@ WORKDIR /opt/shipping
 
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
 
-COPY --from=build /build/target/shipping-1.1.0.jar app.jar
+COPY --from=build /build/target/*.jar app.jar
 
 EXPOSE 8080
 

@@ -5,7 +5,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /opt/server
 
-COPY package.json package-lock.json ./
+COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY server.js ./

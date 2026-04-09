@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: mysql-init-job
+  name: mysql-init-ratings
 spec:
   template:
     spec:
@@ -28,9 +28,15 @@ spec:
         command: ["/bin/sh", "-c"]
         args:
         - |
+          until mysql -h${MYSQL_HOST} -P${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} -e "SELECT 1;" &> /dev/null
+          do
+            echo "Waiting for MySQL to be ready..."
+            sleep 3
+          done
+
           mysql -h${MYSQL_HOST} -P${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} <<EOF
           CREATE DATABASE IF NOT EXISTS ratings;
-          CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_AUTH_PASSWORD}';
+          CREATE USER IF NOT EXISTS '${MYSQL_USER}'@'%' IDENTIFIED BY '${MYSQL_RATINGS_PASSWORD}';
           GRANT ALL PRIVILEGES ON ratings.* TO '${MYSQL_USER}'@'%';
           FLUSH PRIVILEGES;
           USE ratings;
