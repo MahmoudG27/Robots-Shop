@@ -131,6 +131,23 @@ app.get('/add/:id/:sku/:qty', async (req, res) => {
   }
 });
 
+app.post('/shipping/:id', async (req, res) => {
+  try {
+    const data = await redisClient.get(req.params.id);
+    if (!data) return res.status(404).send('cart not found');
+
+    const cart = JSON.parse(data);
+    // Add shipping information to cart
+    cart.shipping = req.body;
+    
+    await saveCart(req.params.id, cart);
+    res.json(cart);
+  } catch (err) {
+    req.log.error(err);
+    res.status(500).send(err);
+  }
+});
+
 // ---------- Helpers ----------
 function mergeList(list, product, qty) {
   const existing = list.find(i => i.sku === product.sku);
