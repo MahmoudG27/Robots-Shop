@@ -32,12 +32,11 @@ spec:
             - name: rabbitmq-data
               mountPath: /var/lib/rabbitmq
   volumeClaimTemplates:
-    - metadata:
-        name: rabbitmq-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        storageClassName: managed-csi
-        resources:
-          requests:
-            storage: 5Gi
+  - metadata:
+      name: rabbitmq-data
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      storageClassName: "standard"
+      resources:
+        requests:
+          storage: 5Gi

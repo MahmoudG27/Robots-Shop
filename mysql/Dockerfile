@@ -1,3 +1,3 @@
 FROM mysql:8
 
-COPY cities.sql /docker-entrypoint-initdb.d/
+COPY cities-dump.sql /docker-entrypoint-initdb.d/
