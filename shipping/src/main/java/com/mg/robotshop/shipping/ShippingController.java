@@ -11,7 +11,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
 @RestController
-@RequestMapping("/shipping")
 public class ShippingController {
 
     private static final Logger logger = LoggerFactory.getLogger(ShippingController.class);

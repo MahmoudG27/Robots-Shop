@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: shipping
   labels:
-    app: shipping
+    service: shipping
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: shipping
+      service: shipping
   template:
     metadata:
       labels:
-        app: shipping
+        service: shipping
     spec:
       containers:
         - name: shipping
@@ -46,7 +46,7 @@ spec:
             httpGet:
               path: /actuator/health
               port: 8080
-            initialDelaySeconds: 150
-            periodSeconds: 5
-            timeoutSeconds: 2
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
             failureThreshold: 5

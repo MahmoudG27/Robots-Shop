@@ -59,7 +59,7 @@ public class City {
     }
 
     public void setRegion(String code) {
-        this.region = region;
+        this.region = code;
     }
 
     public double getLatitude() {

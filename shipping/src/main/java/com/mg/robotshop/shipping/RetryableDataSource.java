@@ -16,13 +16,13 @@ class RetryableDataSource extends AbstractDataSource {
     }
 
     @Override
-    @Retryable(maxAttempts = 10, backoff = @Backoff(multiplier = 2.3, maxDelay = 30000))
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 2000))
     public Connection getConnection() throws SQLException {
         return delegate.getConnection();
     }
 
     @Override
-    @Retryable(maxAttempts = 10, backoff = @Backoff(multiplier = 2.3, maxDelay = 30000))
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 2000))
     public Connection getConnection(String username, String password) throws SQLException {
         return delegate.getConnection(username, password);
     }
