@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: dispatch
   labels:
-    service: dispatch
+    app: dispatch
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: dispatch
+      app: dispatch
   template:
     metadata:
       labels:
-        service: dispatch
+        app: dispatch
     spec:
       containers:
         - name: dispatch

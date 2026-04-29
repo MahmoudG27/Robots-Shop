@@ -1,0 +1,21 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: mongo-alerts
+  labels:
+    release: kube-prometheus-stack
+spec:
+  groups:
+  - name: mongo.rules
+    rules:
+    - alert: MongoHighConnections
+      expr: mongodb_connections{state="current"} > 100
+      for: 2m
+      labels:
+        severity: warning
+
+    - alert: MongoDown
+      expr: up{job="mongodb-exporter"} == 0
+      for: 1m
+      labels:
+        severity: critical

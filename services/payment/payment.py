@@ -11,8 +11,7 @@ from flask import Flask, Response, request, jsonify
 
 from .rabbitmq import Publisher
 
-import prometheus_client
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
 # =========================
 # App setup
@@ -36,23 +35,62 @@ PORT = int(os.getenv("SHOP_PAYMENT_PORT", "8080"))
 # =========================
 # Prometheus Metrics
 # =========================
-PromMetrics = {}
 
-PromMetrics['SOLD_COUNTER'] = Counter(
-    'sold_count', 'Running count of items sold'
+# HTTP metrics
+REQUEST_COUNT = Counter(
+    'payment_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status']
 )
 
-PromMetrics['AUS'] = Histogram(
-    'units_sold',
-    'Average Unit Sale',
+REQUEST_LATENCY = Histogram(
+    'payment_request_latency_seconds',
+    'Request latency in seconds',
+    ['endpoint']
+)
+
+# Business metrics
+SOLD_COUNTER = Counter(
+    'payment_items_sold_total',
+    'Total number of items sold'
+)
+
+UNITS_SOLD = Histogram(
+    'payment_units_sold',
+    'Units sold per order',
     buckets=(1, 2, 5, 10, 100)
 )
 
-PromMetrics['AVS'] = Histogram(
-    'cart_value',
-    'Average Value Sale',
+CART_VALUE = Histogram(
+    'payment_cart_value',
+    'Cart total value',
     buckets=(100, 200, 500, 1000, 2000, 5000, 10000)
 )
+
+# =========================
+# Middleware (metrics)
+# =========================
+@app.before_request
+def before_request():
+    request.start_time = time.time()
+
+
+@app.after_request
+def after_request(response):
+    resp_time = time.time() - request.start_time
+
+    REQUEST_COUNT.labels(
+        request.method,
+        request.path,
+        response.status_code
+    ).inc()
+
+    REQUEST_LATENCY.labels(
+        request.path
+    ).observe(resp_time)
+
+    return response
+
 
 # =========================
 # HTTP helper with retry
@@ -67,15 +105,17 @@ def http_get(url, retries=3, timeout=2):
             time.sleep(0.3)
     raise last_err
 
-def http_post(url, data, retries=3, timeout=2):
+
+def http_post(url, data, headers=None, retries=3, timeout=2):
     last_err = None
     for _ in range(retries):
         try:
-            return requests.post(url, data=data, timeout=timeout)
+            return requests.post(url, data=data, headers=headers, timeout=timeout)
         except Exception as err:
             last_err = err
             time.sleep(0.3)
     raise last_err
+
 
 def http_delete(url, retries=3, timeout=2):
     last_err = None
@@ -123,15 +163,11 @@ def ready():
 
 
 # =========================
-# Metrics
+# Metrics endpoint
 # =========================
 @app.route('/metrics', methods=['GET'])
 def metrics():
-    res = []
-    for m in PromMetrics.values():
-        res.append(prometheus_client.generate_latest(m))
-
-    return Response(res, mimetype='text/plain')
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
 
 # =========================
@@ -177,9 +213,9 @@ def pay(id):
 
     # metrics
     item_count = countItems(cart.get('items', []))
-    PromMetrics['SOLD_COUNTER'].inc(item_count)
-    PromMetrics['AUS'].observe(item_count)
-    PromMetrics['AVS'].observe(cart.get('total', 0))
+    SOLD_COUNTER.inc(item_count)
+    UNITS_SOLD.observe(item_count)
+    CART_VALUE.observe(cart.get('total', 0))
 
     # order id
     orderid = str(uuid.uuid4())
@@ -193,7 +229,7 @@ def pay(id):
     # order history
     if not anonymous_user:
         try:
-            req = http_post(
+            http_post(
                 f'http://{USER}:8080/order/{id}',
                 data=json.dumps({'orderid': orderid, 'cart': cart}),
                 headers={'Content-Type': 'application/json'}

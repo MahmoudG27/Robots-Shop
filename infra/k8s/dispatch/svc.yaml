@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: dispatch
   labels:
-    service: dispatch
+    app: dispatch
 spec:
   type: ClusterIP
   selector:
-    service: dispatch
+    app: dispatch
   ports:
     - name: http
       port: 9090

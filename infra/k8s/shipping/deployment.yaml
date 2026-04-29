@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: shipping
   labels:
-    service: shipping
+    app: shipping
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: shipping
+      app: shipping
   template:
     metadata:
       labels:
-        service: shipping
+        app: shipping
     spec:
       containers:
         - name: shipping

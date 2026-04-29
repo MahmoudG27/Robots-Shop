@@ -3,16 +3,16 @@ kind: Deployment
 metadata:
   name: payment
   labels:
-    service: payment
+    app: payment
 spec:
   replicas: 1
   selector:
     matchLabels:
-      service: payment
+      app: payment
   template:
     metadata:
       labels:
-        service: payment
+        app: payment
     spec:
       terminationGracePeriodSeconds: 30
       containers:

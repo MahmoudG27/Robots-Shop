@@ -27,7 +27,6 @@ services:
     networks:
       - microservices
 
-
 # ---------------- CATALOGUE ----------------
   catalogue:
     build: ../../services/catalogue

@@ -2,6 +2,8 @@ apiVersion: v1
 kind: Service
 metadata:
   name: ratings
+  labels:
+    app: ratings
 spec:
   type: ClusterIP
   ports:
@@ -9,4 +11,4 @@ spec:
     port: 80
     targetPort: 80
   selector:
-    service: ratings
+    app: ratings

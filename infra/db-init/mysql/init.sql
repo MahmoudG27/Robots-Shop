@@ -9,9 +9,11 @@ CREATE DATABASE IF NOT EXISTS ratings;
 -- =============================
 CREATE USER IF NOT EXISTS 'shipping'@'%' IDENTIFIED BY 'shipping123';
 CREATE USER IF NOT EXISTS 'ratings'@'%' IDENTIFIED BY 'ratings';
+CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY 'exporter';
 
 GRANT ALL PRIVILEGES ON cities.* TO 'shipping'@'%';
 GRANT ALL PRIVILEGES ON ratings.* TO 'ratings'@'%';
+GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
 FLUSH PRIVILEGES;
 
 -- =============================

@@ -26,6 +26,8 @@ spec:
           name: management
 
         env:
+        - name: RABBITMQ_PROMETHEUS
+          value: "true"
         - name: RABBITMQ_DEFAULT_USER
           valueFrom:
             secretKeyRef:
