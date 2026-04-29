@@ -1,0 +1,261 @@
+version: '3.8'
+
+services:
+
+# ---------------- WEB ----------------
+  web:
+    build: ../../services/web
+    image: robots/web:v1.0
+    container_name: web
+    ports:
+      - "8080:8080"
+    environment:
+      CART_HOST: cart
+      CATALOGUE_HOST: catalogue
+      USER_HOST: user
+      PAYMENT_HOST: payment
+      SHIPPING_HOST: shipping
+      RATINGS_HOST: ratings
+    depends_on:
+      - cart
+      - catalogue
+      - user
+      - payment
+      - shipping
+      - ratings
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- CATALOGUE ----------------
+  catalogue:
+    build: ../../services/catalogue
+    image: robots/catalogue:v1.0
+    container_name: catalogue
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://admin:admin123@mongo:27017/catalogue?authSource=admin
+      GO_SLOW: "0"
+    depends_on:
+      - mongo
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- CART ----------------
+  cart:
+    build: ../../services/cart
+    image: robots/cart:v1.0
+    container_name: cart
+    environment:
+      NODE_ENV: production
+      REDIS_HOST: redis
+      CATALOGUE_HOST: catalogue
+      CART_SERVER_PORT: "8080"
+    depends_on:
+      - redis
+      - catalogue
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- USER ----------------
+  user:
+    build: ../../services/user
+    image: robots/user:v1.0
+    container_name: user
+    environment:
+      NODE_ENV: production
+      MONGO_URL: mongodb://admin:admin123@mongo:27017/users?authSource=admin
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+    depends_on:
+      - mongo
+      - redis
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- SHIPPING ----------------
+  shipping:
+    build: ../../services/shipping
+    image: robots/shipping:v1.0
+    container_name: shipping
+    environment:
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: cities
+      DB_USER: shipping
+      DB_PASSWORD: shipping123
+      CART_ENDPOINT: http://cart:8080
+    depends_on:
+      - mysql
+      - cart
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- PAYMENT ----------------
+  payment:
+    build: ../../services/payment
+    image: robots/payment:v1.0
+    container_name: payment
+    environment:
+      CART_HOST: cart
+      CART_PORT: "8080"
+      USER_HOST: user
+      USER_PORT: "8080"
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: "5672"
+      AMQP_USER: guest
+      AMQP_PASS: guest
+      PAYMENT_GATEWAY: https://sandbox.paypal.com/
+    depends_on:
+      - rabbitmq
+      - cart
+      - user
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- RATINGS ----------------
+  ratings:
+    build: ../../services/ratings
+    image: robots/ratings:v1.0
+    container_name: ratings
+    environment:
+      REDIS_HOST: redis
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DB: ratings
+      MYSQL_USER: ratings
+      MYSQL_PASSWORD: ratings123
+      CATALOGUE_URL: http://catalogue:8080
+    depends_on:
+      - mysql
+      - redis
+      - catalogue
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- DISPATCH ----------------
+  dispatch:
+    build: ../../services/dispatch
+    image: robots/dispatch:v1.0
+    container_name: dispatch
+    environment:
+      AMQP_HOST: rabbitmq
+      AMQP_PORT: "5672"
+      AMQP_USER: guest
+      AMQP_PASS: guest
+    depends_on:
+      - rabbitmq
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+    networks:
+      - microservices
+
+
+# ---------------- MONGO ----------------
+  mongo:
+    image: mongo:7-alpine
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: admin123
+    volumes:
+      - mongo-data:/data/db
+    restart: unless-stopped
+    networks:
+      - microservices
+
+  mongo-init:
+    image: mongo:6
+    depends_on:
+      - mongo
+    networks:
+      - microservices
+    entrypoint: >
+      sh -c "
+      sleep 10 &&
+      mongosh mongodb://mongo:27017 /init/init.js
+      "
+    volumes:
+      - ../db-init/mongo:/init
+
+
+# ---------------- MYSQL ----------------
+  mysql:
+    build: ../../services/mysql
+    image: robots/mysql:v1.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+    volumes:
+      - mysql-data:/var/lib/mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: unless-stopped
+    networks:
+      - microservices
+
+  mysql-init:
+    image: mysql:8
+    depends_on:
+      - mysql
+    networks:
+      - microservices
+    entrypoint: >
+      sh -c "
+      sleep 20 &&
+      mysql -hmysql -uroot -proot < /init/init.sql
+      "
+    volumes:
+      - ../db-init/mysql:/init
+
+# ---------------- REDIS ----------------
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    networks:
+      - microservices
+
+
+# ---------------- RABBITMQ ----------------
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    restart: unless-stopped
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - microservices
+
+
+# ---------------- NETWORKS ----------------
+networks:
+  microservices:
+    driver: bridge
+
+
+# ---------------- VOLUMES ----------------
+volumes:
+  mongo-data:
+  mysql-data:
+  redis_data:
+  rabbitmq_data:

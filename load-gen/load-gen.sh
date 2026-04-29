@@ -56,11 +56,10 @@ do
             NUM_CLIENTS=$OPTARG
             if echo "$NUM_CLIENTS" | egrep -q '^[0-9]+$'
             then
-                CLIENTS=${NUM_CLIENTS:-1}
-                echo "Running $CLIENTS clients"
+                echo "Running $NUM_CLIENTS clients"
             else
                 echo "$NUM_CLIENTS is not a number falling back to 1"
-                CLIENTS=1
+                NUM_CLIENTS=1
             fi
             ;;
         t)
@@ -96,7 +95,6 @@ docker run \
     $DAEMON \
     --name loadgen \
     --rm \
-    --network=host \
     -e "HOST=$HOST" \
     -e "NUM_CLIENTS=$NUM_CLIENTS" \
     -e "RUN_TIME=$RUN_TIME" \

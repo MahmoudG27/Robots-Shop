@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dispatch
+  labels:
+    service: dispatch
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: dispatch
+  template:
+    metadata:
+      labels:
+        service: dispatch
+    spec:
+      containers:
+        - name: dispatch
+          image: containerregistryrobots.azurecr.io/dispatch:v1.0.0
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 9090
+
+          env:
+            - name: AMQP_HOST
+              value: rabbitmq
+
+            - name: DISPATCH_ERROR_PERCENT
+              value: "0"
+
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 300m
+              memory: 256Mi
+
+          readinessProbe:
+            httpGet:
+              path: /metrics
+              port: 9090
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /metrics
+              port: 9090
+            initialDelaySeconds: 20
+            periodSeconds: 20

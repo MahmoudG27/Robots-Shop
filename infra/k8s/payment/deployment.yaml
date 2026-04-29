@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment
+  labels:
+    service: payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: payment
+  template:
+    metadata:
+      labels:
+        service: payment
+    spec:
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: payment
+        image: containerregistryrobots.azurecr.io/payment:v1.0.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: http
+
+        env:
+        - name: CART_HOST
+          value: cart
+        - name: USER_HOST
+          value: user
+        - name: PAYMENT_GATEWAY
+          value: https://paypal.com/
+        - name: AMQP_HOST
+          value: rabbitmq
+        - name: PAYMENT_DELAY_MS
+          value: "0"
+        - name: RABBITMQ_USER
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: RABBITMQ_DEFAULT_USER
+        - name: RABBITMQ_PASS
+          valueFrom:
+            secretKeyRef:
+              name: rabbitmq-secret
+              key: RABBITMQ_DEFAULT_PASS
+              
+        resources:
+          limits:
+            cpu: 200m
+            memory: 100Mi
+          requests:
+            cpu: 50m
+            memory: 50Mi
+        
+        livenessProbe:
+          httpGet:
+            path: /health/live
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5
+
+        readinessProbe:
+          httpGet:
+            path: /health/ready
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 30
+          timeoutSeconds: 5

@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  load:
+    image: robots/web:v1.0
+    container_name: load-gen
+    build: ../../load-gen
+    environment:
+      HOST: "http://web:8080"
+      NUM_CLIENTS: "50"
+      RUN_TIME: "10m"
+      SILENT: "0"
+      ERROR: "0"
+    networks:
+      - microservices
+    profiles:
+      - testing
+
+networks:
+  microservices:
+    external: true

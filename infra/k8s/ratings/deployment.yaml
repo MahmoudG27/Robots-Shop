@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ratings
+  labels:
+    service: ratings
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      service: ratings
+  template:
+    metadata:
+      labels:
+        service: ratings
+    spec:
+      containers:
+      - name: ratings
+        image: containerregistryrobots.azurecr.io/ratings:v1.0.0
+        imagePullPolicy: IfNotPresent
+
+        ports:
+        - containerPort: 80
+
+        env:
+        - name: REDIS_HOST
+          value: redis
+        - name: REDIS_PORT
+          value: "6379"
+
+        - name: MYSQL_HOST
+          value: mysql
+        - name: MYSQL_PORT
+          value: "3306"
+        - name: MYSQL_DB
+          value: ratings
+        - name: MYSQL_USER
+          value: ratings
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: mysql-secret
+              key: ratings-password
+
+        - name: CATALOGUE_URL
+          value: "http://catalogue:8080/"
+
+        resources:
+          requests:
+            cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 200m
+            memory: 100Mi
+
+        readinessProbe:
+          httpGet:
+            path: /_health
+            port: 80
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          failureThreshold: 30
+
+        livenessProbe:
+          httpGet:
+            path: /_health
+            port: 80
+          initialDelaySeconds: 15
+          periodSeconds: 10
+          failureThreshold: 3
