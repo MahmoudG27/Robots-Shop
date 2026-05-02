@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  labels:
+    app: web
+spec:
+  replicas: {{ .Values.web.replicas }}
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: nginx-exporter
+          image: nginx/nginx-prometheus-exporter:latest
+          args:
+          - -nginx.scrape-uri=http://localhost:8080/stub_status
+          ports:
+          - containerPort: {{ .Values.web.service.metricsPort }}
+          
+        - name: web
+          image: "{{ .Values.web.image.repository }}:{{ .Values.web.image.tag }}"
+          imagePullPolicy: IfNotPresent
+
+          ports:
+          - containerPort: {{ .Values.web.service.port }}
+
+          env:
+            - name: CATALOGUE_HOST
+              value: catalogue
+
+            - name: USER_HOST
+              value: user
+
+            - name: CART_HOST
+              value: cart
+
+            - name: SHIPPING_HOST
+              value: shipping
+
+            - name: PAYMENT_HOST
+              value: payment
+
+            - name: RATINGS_HOST
+              value: ratings
+
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 20

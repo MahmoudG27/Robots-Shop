@@ -1,0 +1,107 @@
+name: CI/CD - Robot Shop
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  REGISTRY: containerregistryrobots.azurecr.io
+
+jobs:
+
+# ---------------- DETECT CHANGES ----------------
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: json
+          filters: |
+            cart: services/cart/**
+            catalogue: services/catalogue/**
+            user: services/user/**
+            payment: services/payment/**
+            shipping: services/shipping/**
+            ratings: services/ratings/**
+            dispatch: services/dispatch/**
+            web: services/web/**
+
+# ---------------- BUILD + SCAN + PUSH ----------------
+  build:
+    needs: detect
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        service: [cart, catalogue, user, payment, shipping, ratings, dispatch, web]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check if changed
+        id: check
+        run: |
+          echo "changed=$(echo '${{ needs.detect.outputs.services }}' | jq -r '.${{ matrix.service }}')" >> $GITHUB_OUTPUT
+
+      - name: Login to ACR
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
+          -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+
+      - name: Setup Buildx
+        if: steps.check.outputs.changed == 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build & Push (with cache)
+        if: steps.check.outputs.changed == 'true'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./services/${{ matrix.service }}
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ matrix.service }}:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ matrix.service }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ matrix.service }}:cache,mode=max
+
+      - name: Scan Image
+        if: steps.check.outputs.changed == 'true'
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+
+# ---------------- DEPLOY DEV ----------------
+  deploy-dev:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: dev
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: azure/setup-helm@v4
+      - uses: azure/setup-kubectl@v4
+
+      - name: Configure Kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG_DEV }}" > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Helm Lint
+        run: helm lint ./infra/helm
+
+      - name: Deploy
+        run: |
+          helm upgrade --install robot-shop ./infra/helm \
+            --namespace dev \
+            --create-namespace \
+            --set global.imageTag=${{ github.sha }} \
+            --atomic --timeout 5m

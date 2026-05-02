@@ -1,0 +1,112 @@
+global:
+  namespace: default
+
+ingress:
+  enabled: true
+  className: nginx         # azure-application-gateway
+  host: robot-shop.local
+
+storageClassName: standard  # default or managed-csi
+
+cart:
+  image:
+    repository: containerregistryrobots.azurecr.io/cart
+    tag: v1.0.0
+  replicas: 2
+  service:
+    port: 8080
+
+catalogue:
+  image:
+    repository: containerregistryrobots.azurecr.io/catalogue
+    tag: v1.0.0
+  replicas: 2
+  service:
+    port: 8080
+
+dispatch:
+  image:
+    repository: containerregistryrobots.azurecr.io/dispatch
+    tag: v1.0.0
+  replicas: 1
+  service:
+    port: 9090
+
+mongodb:
+  image:
+    repository: mongo
+    tag: 7.0
+  replicas: 1
+  service:
+    port: 27017
+  storage: 5Gi
+
+mysql:
+  image:
+    repository: containerregistryrobots.azurecr.io/mysql
+    tag: v1.0.0
+  replicas: 1
+  service:
+    port: 3306
+  storage: 10Gi
+
+rabbitmq:
+  image:
+    repository: rabbitmq
+    tag: 3.13-management-alpine
+  replicas: 1
+  service:
+    amqpPort: 5672
+    managementPort: 15672
+    metricsPort: 15692
+  storage: 5Gi
+
+redis:
+  image:
+    repository: redis
+    tag: 7-alpine
+  replicas: 1
+  service:
+    port: 6379
+  storage: 1Gi
+
+payment:
+  image:
+    repository: containerregistryrobots.azurecr.io/payment
+    tag: v1.0.0
+  replicas: 1
+  service:
+    port: 8080
+
+ratings:
+  image:
+    repository: containerregistryrobots.azurecr.io/ratings
+    tag: v1.0.0
+  replicas: 1
+  service:
+    port: 80
+
+shipping:
+  image:
+    repository: containerregistryrobots.azurecr.io/shipping
+    tag: v1.0.0
+  replicas: 1
+  service:
+    port: 8080
+
+user:
+  image:
+    repository: containerregistryrobots.azurecr.io/user
+    tag: v1.0.0
+  replicas: 2
+  service:
+    port: 8080
+
+web:
+  image:
+    repository: containerregistryrobots.azurecr.io/web
+    tag: v1.0.0
+  replicas: 2
+  service:
+    port: 8080
+    metricsPort: 9113

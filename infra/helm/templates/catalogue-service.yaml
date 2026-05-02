@@ -9,6 +9,6 @@ spec:
     app: catalogue
   ports:
   - name: http
-    port: 8080
-    targetPort: 8080
+    port: {{ .Values.catalogue.service.port }}
+    targetPort: {{ .Values.catalogue.service.port }}
   type: ClusterIP

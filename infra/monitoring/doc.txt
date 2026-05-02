@@ -173,3 +173,5 @@ rate(mysql_global_status_created_tmp_disk_tables[5m])
 
 14) Aborted Connections
 rate(mysql_global_status_aborted_connects[5m])
+
+#########################################################################################################
