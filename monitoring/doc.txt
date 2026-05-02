@@ -1,0 +1,177 @@
+# Install Prometheus Stack using Helm
+
+# Adding the Repo
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+
+# Install the stack
+helm install monitoring prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  --create-namespace \
+  -f infra/monitoring/values.yaml
+
+# Connect Grafana
+kubectl get svc -n monitoring
+--> http://localhost:30007
+--> user: admin - pass: admin123
+
+#####################################################################################################
+
+kube-state-metrics = enabled -> in Helm values
+cAdvisor & node-exporter -> existing in Prometheus stack
+
+Cluster Dashboard in Grafana:
+
+➜ Dashboards
+➜ New
+➜ New Dashboard
+➜ Add Visualization
+
+1- Choose Data Source = "Prometheus"
+
+2- Adding the Queries (Cluster Overview)
+
+1) CPU Usage (Cluster)
+Panel Type: Time series
+sum(rate(container_cpu_usage_seconds_total{container!=""}[5m]))
+
+2) CPU Usage per Pod
+Panel Type: Time series
+sum by (pod) (
+  rate(container_cpu_usage_seconds_total{container!=""}[5m])
+)
+
+3) Memory Usage (Cluster)
+Panel Type: Time series
+sum(container_memory_usage_bytes{container!=""})
+
+4) Memory Usage per Pod
+sum by (pod) (container_memory_usage_bytes{container!=""})
+
+5) Node CPU Usage
+100 - avg(rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100
+
+6) Node Memory Usage
+(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+7) Network Receive
+sum(rate(container_network_receive_bytes_total[5m]))
+
+8) Network Transmit
+sum(rate(container_network_transmit_bytes_total[5m]))
+
+9) Pod Count (Running)
+count(kube_pod_status_phase{phase="Running"})
+
+10) Restart Count
+sum(kube_pod_container_status_restarts_total)
+
+11) CPU Requests vs Usage
+sum(rate(container_cpu_usage_seconds_total[5m]))
+/
+sum(kube_pod_container_resource_requests_cpu_cores)
+
+12) Memory Requests vs Usage
+sum(kube_pod_container_resource_requests_memory_bytes)
+/
+sum(container_memory_usage_bytes)
+
+#####################################################################################################
+
+Business Dashboard in Grafana:
+
+1) Total Items Sold
+Panel: Stat
+sum(sold_count)
+
+2) Items Sold Rate (Real-time)
+rate(sold_count[5m])
+
+3) Average Items per Order
+rate(units_sold_sum[5m])
+/
+rate(units_sold_count[5m])
+
+4) Average Order Value
+rate(cart_value_sum[5m])
+/
+rate(cart_value_count[5m])
+
+5) Revenue Rate
+rate(cart_value_sum[5m])
+
+6) Orders Count
+rate(cart_value_count[5m])
+
+7) Orders per Minute
+rate(cart_value_count[5m]) * 60
+
+8) High Value Orders %
+rate(cart_value_bucket{le="1000"}[5m])
+/
+rate(cart_value_count[5m])
+
+9) Units Distribution (Histogram View)
+Panel type: Heatmap
+rate(units_sold_bucket[5m])
+
+10) Cart Value Distribution
+rate(cart_value_bucket[5m])
+
+#####################################################################################################
+
+MySQL Dashboard in Grafana:
+
+1) Active Connections
+Stat Panel
+mysql_global_status_threads_connected
+
+2) Max Connections Usage %
+(
+  mysql_global_status_threads_connected
+/
+mysql_global_variables_max_connections
+) * 100
+
+3) Queries Per Second (QPS)
+rate(mysql_global_status_queries[5m])
+
+4) Slow Queries
+rate(mysql_global_status_slow_queries[5m])
+
+5) Uptime
+mysql_global_status_uptime
+
+6) Connections Trend
+Time series
+mysql_global_status_threads_connected
+
+7) Threads Running
+mysql_global_status_threads_running
+
+8) InnoDB Buffer Pool Usage %
+(
+  mysql_global_status_innodb_buffer_pool_bytes_data
+/
+mysql_global_status_innodb_buffer_pool_bytes_total
+) * 100
+
+9) InnoDB Reads (Disk vs Cache)
+rate(mysql_global_status_innodb_buffer_pool_reads[5m])
+
+10) Table Locks
+rate(mysql_global_status_table_locks_waited[5m])
+
+11) Bytes In
+rate(mysql_global_status_bytes_received[5m])
+
+12) Bytes Out
+rate(mysql_global_status_bytes_sent[5m])
+
+13) Temporary Tables on Disk
+rate(mysql_global_status_created_tmp_disk_tables[5m])
+
+14) Aborted Connections
+rate(mysql_global_status_aborted_connects[5m])
+
+#########################################################################################################

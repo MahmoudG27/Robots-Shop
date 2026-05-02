@@ -1,0 +1,73 @@
+grafana:
+  adminPassword: "admin123"
+
+  # service:
+  #   type: NodePort
+  #   nodePort: 30007
+
+  ingress:
+    enabled: false
+
+  persistence:
+    enabled: true
+    size: 5Gi
+
+  defaultDashboardsEnabled: true
+
+  additionalDataSources:
+    - name: Prometheus
+      type: prometheus
+      url: http://monitoring-kube-prometheus-prometheus:9090
+      access: proxy
+      isDefault: true
+
+---
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+
+    serviceMonitorSelectorNilUsesHelmValues: false
+
+    resources:
+      requests:
+        memory: 400Mi
+        cpu: 200m
+      limits:
+        memory: 800Mi
+        cpu: 500m
+
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+---
+
+alertmanager:
+  enabled: true
+
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 2Gi
+
+---
+
+kube-state-metrics:
+  enabled: true
+
+nodeExporter:
+  enabled: true
+
+---
+
+metricsServer:
+  enabled: true
