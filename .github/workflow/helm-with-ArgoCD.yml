@@ -1,18 +1,17 @@
-name: Helm CI/CD - Robot Shop
+name: CI - GitOps Robot Shop
 
 on:
-  # push:
-  #   branches: [ master ]
-  workflow_dispatch:
+  push:
+    branches: [ main ]
 
 env:
   REGISTRY: containerregistryrobots.azurecr.io
 
-# ---------------- DETECT CHANGES ----------------
 jobs:
+
+# ---------------- DETECT CHANGES ----------------
   detect:
     runs-on: ubuntu-latest
-
     outputs:
       services: ${{ steps.filter.outputs.changes }}
 
@@ -32,7 +31,7 @@ jobs:
             dispatch: services/dispatch/**
             web: services/web/**
 
-# ---------------- BUILD + SCAN + PUSH ----------------
+# ---------------- BUILD + PUSH ----------------
   build:
     needs: detect
     runs-on: ubuntu-latest
@@ -45,26 +44,22 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # -------- check if service changed --------
       - name: Check if service changed
         id: check
         run: |
           echo '${{ needs.detect.outputs.services }}' > changes.json
           echo "changed=$(jq -r '.${{ matrix.service }} // false' changes.json)" >> $GITHUB_OUTPUT
 
-      # -------- login ACR --------
       - name: Login to ACR
         if: steps.check.outputs.changed == 'true'
         run: |
           echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
           -u "${{ secrets.ACR_USERNAME }}" --password-stdin
 
-      # -------- setup buildx --------
       - name: Setup Buildx
         if: steps.check.outputs.changed == 'true'
         uses: docker/setup-buildx-action@v3
 
-      # -------- build & push --------
       - name: Build & Push Image
         if: steps.check.outputs.changed == 'true'
         uses: docker/build-push-action@v5
@@ -73,48 +68,30 @@ jobs:
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
-            ${{ env.REGISTRY }}/${{ matrix.service }}:latest
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
 
-      # -------- security scan --------
-      - name: Trivy Scan
-        if: steps.check.outputs.changed == 'true'
-        uses: aquasecurity/trivy-action@v0.20.0
-        with:
-          image-ref: ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
-          severity: CRITICAL,HIGH
-          exit-code: 1
-
-# ---------------- DEPLOY DEV ----------------
-  deploy-dev:
+# ---------------- UPDATE VALUES (GitOps) ----------------
+  update-values:
     needs: build
     runs-on: ubuntu-latest
-    environment: dev
+
+    if: "!contains(github.event.head_commit.message, 'Update image tag')"
 
     steps:
       - uses: actions/checkout@v3
 
-      # -------- helm & kubectl --------
-      - uses: azure/setup-helm@v4
-      - uses: azure/setup-kubectl@v4
+      - name: Install yq
+        run: sudo snap install yq
 
-      # -------- kubeconfig fix --------
-      - name: Configure Kubernetes
+      - name: Update image tag in values.yaml
         run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG_DEV }}" > ~/.kube/config
+          yq -i '.global.imageTag = "${{ github.sha }}"' infra/helm/values.yaml
 
-      # -------- helm lint --------
-      - name: Helm Lint
-        run: helm lint ./infra/helm
-
-      # -------- deploy --------
-      - name: Helm Deploy
+      - name: Commit & Push
         run: |
-          helm upgrade --install robot-shop ./infra/helm \
-            --namespace dev \
-            --create-namespace \
-            --set global.imageTag=${{ github.sha }} \
-            --atomic \
-            --timeout 5m
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+
+          git add infra/helm/values.yaml
+          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes"
+
+          git push

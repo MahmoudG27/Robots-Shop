@@ -15,6 +15,10 @@ import (
 	amqp "github.com/rabbitmq/amqp091-go"
 )
 
+type HealthResponse struct {
+	Status string `json:"status"`
+}
+
 const Service = "dispatch"
 
 var (
@@ -138,6 +142,16 @@ func processOrder(orderId string) {
 	}
 }
 
+func liveHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(HealthResponse{Status: "alive"})
+}
+
+func readyHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(HealthResponse{Status: "ready"})
+}
+
 func main() {
 
 	rand.Seed(time.Now().UnixNano())
@@ -171,11 +185,18 @@ func main() {
 	// force first connection
 	rabbitCloseError <- amqp.ErrClosed
 
-	// metrics server
 	go func() {
-		http.Handle("/metrics", promhttp.Handler())
-		log.Println("Metrics on :9090/metrics")
-		log.Fatal(http.ListenAndServe(":9090", nil))
+		mux := http.NewServeMux()
+
+		// metrics
+		mux.Handle("/metrics", promhttp.Handler())
+
+		// health
+		mux.HandleFunc("/health/live", liveHandler)
+		mux.HandleFunc("/health/ready", readyHandler)
+
+		log.Println("HTTP server on :8080")
+		log.Fatal(http.ListenAndServe(":8080", mux))
 	}()
 
 	// consumer

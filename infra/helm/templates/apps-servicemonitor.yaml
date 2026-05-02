@@ -1,0 +1,24 @@
+{{- range $name, $svc := .Values.services }}
+{{- $defaults := $.Values.services.defaults }}
+{{- $svc = merge $defaults $svc }}
+
+{{- if $svc.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ $name }}-monitor
+  labels:
+    app: {{ $name }}
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: {{ $name }}
+
+  endpoints:
+    - port: {{ $svc.serviceMonitor.port }}
+      path: {{ $svc.serviceMonitor.path }}
+      interval: {{ $svc.serviceMonitor.interval }}
+---
+{{- end }}
+{{- end }}

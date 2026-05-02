@@ -1,5 +1,6 @@
 global:
   namespace: default
+  imageTag: latest
 
 ingress:
   enabled: true
@@ -8,105 +9,249 @@ ingress:
 
 storageClassName: standard  # default or managed-csi
 
-cart:
-  image:
-    repository: containerregistryrobots.azurecr.io/cart
+services:
+  defaults:
+    securityContext:
+      runAsNonRoot: true
+      runAsUser: 1000
+    
+    replicas: 1
+
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 300m
+        memory: 256Mi
+
+    probes:
+      enabled: true
+      livenessPath: /health/live
+      readinessPath: /health/ready
+
+    env: {}
+
+    ports:
+      - name: http
+        port: 8080
+
+    hpa:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      cpuUtilization: 70
+
+    serviceMonitor:
+      enabled: false
+      path: /metrics
+      interval: 15s
+      port: http
+
+  cart:
+    replicas: 2
+    image: containerregistryrobots.azurecr.io/cart
     tag: v1.0.0
-  replicas: 2
-  service:
-    port: 8080
 
-catalogue:
-  image:
-    repository: containerregistryrobots.azurecr.io/catalogue
+    env:
+      REDIS_HOST: redis
+      CATALOGUE_HOST: catalogue
+      CART_SERVER_PORT: "8080"
+
+    hpa:
+      enabled: true
+
+  catalogue:
+    image: containerregistryrobots.azurecr.io/catalogue
     tag: v1.0.0
-  replicas: 2
-  service:
-    port: 8080
 
-dispatch:
-  image:
-    repository: containerregistryrobots.azurecr.io/dispatch
+    env:
+      MONGO_URL: "mongodb://mongodb:27017/catalogue"
+      GO_SLOW: "0"
+
+    hpa:
+      enabled: true
+
+  dispatch:
+    image: containerregistryrobots.azurecr.io/dispatch
     tag: v1.0.0
-  replicas: 1
-  service:
-    port: 9090
 
-mongodb:
-  image:
-    repository: mongo
-    tag: 7.0
-  replicas: 1
-  service:
-    port: 27017
-  storage: 5Gi
+    env:
+      AMQP_HOST: rabbitmq
+      DISPATCH_ERROR_PERCENT: "0"
 
-mysql:
-  image:
-    repository: containerregistryrobots.azurecr.io/mysql
+    hpa:
+      enabled: false
+
+  payment:
+    image: containerregistryrobots.azurecr.io/payment
     tag: v1.0.0
-  replicas: 1
-  service:
-    port: 3306
-  storage: 10Gi
 
-rabbitmq:
-  image:
-    repository: rabbitmq
-    tag: 3.13-management-alpine
-  replicas: 1
-  service:
-    amqpPort: 5672
-    managementPort: 15672
-    metricsPort: 15692
-  storage: 5Gi
+    env:
+      CART_HOST: cart
+      USER_HOST: user
+      PAYMENT_GATEWAY: https://paypal.com/
+      AMQP_HOST: rabbitmq
+      PAYMENT_DELAY_MS: "0"
 
-redis:
-  image:
-    repository: redis
-    tag: 7-alpine
-  replicas: 1
-  service:
-    port: 6379
-  storage: 1Gi
+    secrets:
+      - name: RABBITMQ_USER
+        secret: rabbitmq-secret
+        key: RABBITMQ_DEFAULT_USER
 
-payment:
-  image:
-    repository: containerregistryrobots.azurecr.io/payment
+      - name: RABBITMQ_PASS
+        secret: rabbitmq-secret
+        key: RABBITMQ_DEFAULT_PASS
+
+    hpa:
+      enabled: false
+
+  ratings:
+    image: containerregistryrobots.azurecr.io/ratings
     tag: v1.0.0
-  replicas: 1
-  service:
-    port: 8080
+    ports:
+    - name: http
+      port: 80
 
-ratings:
-  image:
-    repository: containerregistryrobots.azurecr.io/ratings
-    tag: v1.0.0
-  replicas: 1
-  service:
-    port: 80
+    env:
+      REDIS_HOST: redis
+      REDIS_PORT: "6379"
+      MYSQL_HOST: mysql
+      MYSQL_PORT: "3306"
+      MYSQL_DB: ratings
+      MYSQL_USER: ratings
+      CATALOGUE_URL: "http://catalogue:8080/"
+    
+    secrets:
+      - name: MYSQL_PASSWORD
+        secret: mysql-secret
+        key: ratings-password
 
-shipping:
-  image:
-    repository: containerregistryrobots.azurecr.io/shipping
-    tag: v1.0.0
-  replicas: 1
-  service:
-    port: 8080
+    probes:
+      enabled: true
+      livenessPath: /_health
+      readinessPath: /_health
 
-user:
-  image:
-    repository: containerregistryrobots.azurecr.io/user
+    hpa:
+      enabled: true
+
+  shipping:
+    image: containerregistryrobots.azurecr.io/shipping
     tag: v1.0.0
-  replicas: 2
-  service:
-    port: 8080
+
+    env:
+      CART_ENDPOINT: cart
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      DB_NAME: cities
+      DB_USER: shipping
+    secrets:
+      - name: DB_PASSWORD
+        secret: mysql-secret
+        key: shipping-password
+  
+    probes:
+      enabled: true
+      livenessPath: /actuator/health/liveness
+      readinessPath: /actuator/health/readiness
+
+    hpa:
+      enabled: true
+
+  user:
+    image: containerregistryrobots.azurecr.io/user
+    tag: v1.0.0
+
+    env:
+      MONGO_URL: "mongodb://mongodb:27017/users"
+      REDIS_HOST: "redis"
+
+    hpa:
+      enabled: true
+
+# ---------------- Front ----------------
 
 web:
-  image:
-    repository: containerregistryrobots.azurecr.io/web
-    tag: v1.0.0
   replicas: 2
-  service:
-    port: 8080
-    metricsPort: 9113
+  image: containerregistryrobots.azurecr.io/web
+  tag: v1.0.0
+  ports:
+    - name: http
+      port: 8080
+    - name: metrics
+      port: 9113
+
+  env:
+    CATALOGUE_HOST: catalogue
+    USER_HOST: user
+    CART_HOST: cart
+    SHIPPING_HOST: shipping
+    PAYMENT_HOST: payment
+    RATINGS_HOST: ratings
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+  probes:
+    enabled: true
+    livenessPath: /health
+    readinessPath: /health
+
+  hpa:
+    enabled: true
+    minReplicas: 1
+    maxReplicas: 3
+    cpuUtilization: 70
+
+  serviceMonitor:
+    enabled: true
+    path: /metrics
+    interval: 15s
+    port: metrics
+
+# ---------------- INFRA ----------------
+databases:
+  mongodb:
+    image:
+      repository: mongo
+      tag: 7.0
+    replicas: 1
+    service:
+      port: 27017
+    storage: 5Gi
+
+  mysql:
+    image:
+      repository: containerregistryrobots.azurecr.io/mysql
+      tag: v1.0.0
+    replicas: 1
+    service:
+      port: 3306
+    storage: 10Gi
+
+cache:
+  redis:
+    image:
+      repository: redis
+      tag: 7-alpine
+    replicas: 1
+    service:
+      port: 6379
+    storage: 1Gi
+
+messaging:
+  rabbitmq:
+    image:
+      repository: rabbitmq
+      tag: 3.13-management-alpine
+    replicas: 1
+    service:
+      amqpPort: 5672
+      managementPort: 15672
+      metricsPort: 15692
+    storage: 5Gi

@@ -15,8 +15,8 @@ FROM scratch
 
 WORKDIR /app
 
-# Expose metrics port
-EXPOSE 9090
+# HTTP port (NOT metrics only anymore)
+EXPOSE 8080
 
 COPY --from=builder /go/src/app/dispatch .
 

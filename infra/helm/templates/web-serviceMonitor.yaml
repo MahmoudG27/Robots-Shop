@@ -11,3 +11,23 @@ spec:
   endpoints:
     - port: metrics
       interval: 15s
+
+{{- if $svc.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: web-monitor
+  labels:
+    app: web
+    release: monitoring
+spec:
+  selector:
+    matchLabels:
+      app: web
+
+  endpoints:
+    - port: {{ .Values.web.serviceMonitor.port }}
+      path: {{ .Values.web.serviceMonitor.path }}
+      interval: {{ .Values.web.serviceMonitor.interval }}
+---
+{{- end }}

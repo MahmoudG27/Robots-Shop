@@ -1,8 +1,8 @@
-{{ if .Values.ingress.enabled }}
+{{- if .Values.ingress.enabled }}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  namespace: robot-shop
+  namespace: {{ .Values.global.namespace }}
   name: robot-shop
 spec:
   ingressClassName: {{ .Values.ingress.className }}
@@ -15,6 +15,5 @@ spec:
               service:
                 name: web
                 port:
-                  number: {{ .Values.web.service.port }}
-
-{{ end }}
+                  number: {{ .Values.web.ports[0].port }}
+{{- end }}
