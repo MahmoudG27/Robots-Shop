@@ -5,7 +5,6 @@ global:
 ingress:
   enabled: true
   className: nginx         # azure-application-gateway
-  host: robot-shop.local
 
 storageClassName: standard  # default or managed-csi
 
