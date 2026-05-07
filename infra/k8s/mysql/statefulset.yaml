@@ -19,10 +19,12 @@ spec:
         fsGroup: 999
       containers:
       - name: mysql
-        image: containerregistryrobots.azurecr.io/mysql:v1.0.0
+        image: mysql:8.0
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
+        - name: init-db
+          mountPath: /docker-entrypoint-initdb.d
 
         env:
         - name: MYSQL_ROOT_PASSWORD
@@ -66,3 +68,7 @@ spec:
       resources:
         requests:
           storage: 10Gi
+  volumes:
+  - name: init-db
+    configMap:
+      name: mysql-db-dump

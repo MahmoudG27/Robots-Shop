@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-db-dump
+data:
+  init-shipping-data.sql: |
+    CREATE DATABASE IF NOT EXISTS cities;
+    USE cities;
+
+    CREATE TABLE IF NOT EXISTS codes (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      code VARCHAR(2) NOT NULL,
+      name VARCHAR(100) NOT NULL
+    ) ENGINE=InnoDB;
+
+    CREATE TABLE IF NOT EXISTS cities (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      country_code VARCHAR(2) NOT NULL,
+      city VARCHAR(100) NOT NULL,
+      name VARCHAR(100) NOT NULL,
+      region VARCHAR(10) NOT NULL,
+      latitude DECIMAL(10,6) NOT NULL,
+      longitude DECIMAL(10,6) NOT NULL
+    ) ENGINE=InnoDB;
+
+    TRUNCATE TABLE codes;
+    TRUNCATE TABLE cities;
+
+    INSERT INTO codes (code, name) VALUES 
+    ('eg', 'Egypt'),
+    ('sa', 'Saudi Arabia'),
+    ('ae', 'United Arab Emirates');
+ 
+    INSERT INTO cities (country_code, city, name, region, latitude, longitude) VALUES 
+    ('eg', 'cairo', 'Cairo', '01', 30.044419, 31.235711),
+    ('eg', 'alexandria', 'Alexandria', '02', 31.200092, 29.918739),
+    ('eg', 'giza', 'Giza', '03', 30.013056, 31.208853),
+    ('eg', 'mansoura', 'Mansoura', '04', 31.0409, 31.3785),
+    ('sa', 'riyadh', 'Riyadh', '01', 24.713552, 46.675296),
+    ('sa', 'jeddah', 'Jeddah', '02', 21.485811, 39.192505),
+    ('sa', 'dammam', 'Dammam', '03', 26.420694, 50.088792),
+    ('ae', 'dubai', 'Dubai', '01', 25.204849, 55.270783),
+    ('ae', 'abu-dhabi', 'Abu Dhabi', '02', 24.453884, 54.377343),
+    ('ae', 'sharjah', 'Sharjah', '03', 25.346255, 55.420932);

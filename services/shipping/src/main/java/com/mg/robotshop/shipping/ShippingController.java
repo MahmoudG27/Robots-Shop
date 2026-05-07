@@ -23,7 +23,7 @@ public class ShippingController {
     private String cartEndpoint;
 
     private String buildCartUrl(String id) {
-        return "http://" + cartEndpoint + ":8080/shipping/" + id;
+        return "http://" + cartEndpoint + ":8080/shipping/" + id.split(",")[0]; 
     }
 
     private static final List<byte[]> bytesGlobal =
@@ -95,7 +95,7 @@ public class ShippingController {
         }
 
         Calculator calc = new Calculator(city);
-        long distance = calc.getDistance(51.164896, 7.068792);
+        long distance = calc.getDistance(30.0444, 31.2357);
 
         double cost = Math.rint(distance * 5) / 100.0;
 
