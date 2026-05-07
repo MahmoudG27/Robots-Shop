@@ -85,14 +85,11 @@ public class ShippingController {
     @GetMapping("/calc/{id}")
     public Ship calc(@PathVariable long id) {
 
-        City city = cityRepo.findById(id);
-
-        if (city == null) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
-                    "city not found"
-            );
-        }
+        City city = cityRepo.findById(id)
+        .orElseThrow(() -> new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "city not found"
+        ));
 
         Calculator calc = new Calculator(city);
         long distance = calc.getDistance(30.0444, 31.2357);
