@@ -21,7 +21,7 @@ Stan's Robot Shop is a complete microservices platform showcasing modern cloud-n
 | **Shipping** | Java + Spring Boot + MySQL | 8080 | Shipping calculation & management |
 | **Ratings** | PHP + Apache + MySQL | 80 | Product ratings & reviews |
 | **Payment** | Python + Flask + RabbitMQ | 8080 | Payment processing |
-| **Dispatch** | Go + RabbitMQ | 9090 | Order dispatch & fulfillment |
+| **Dispatch** | Go + RabbitMQ | 8080 | Order dispatch & fulfillment |
 
 ### Data Services
 

@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   load:
-    image: robots/web:v1.0
+    image: containerregistryrobots.azurecr.io/load-gen:v1.0.0
     container_name: load-gen
     build: ../../load-gen
     environment:

@@ -10,10 +10,13 @@ helm install monitoring prometheus-community/kube-prometheus-stack \
   --create-namespace \
   -f infra/monitoring/values.yaml
 
+kubectl port-forward -n monitoring svc/monitoring-grafana 3000:80 --address 0.0.0.0
+
 # Connect Grafana
 kubectl get svc -n monitoring
---> http://localhost:30007
+--> http://localhost:3000
 --> user: admin - pass: admin123
+
 
 #####################################################################################################
 

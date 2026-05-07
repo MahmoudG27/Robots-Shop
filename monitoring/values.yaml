@@ -15,11 +15,11 @@ grafana:
   defaultDashboardsEnabled: true
 
   additionalDataSources:
-    - name: Prometheus
-      type: prometheus
-      url: http://monitoring-kube-prometheus-prometheus:9090
-      access: proxy
-      isDefault: true
+  - name: Prometheus
+    type: prometheus
+    url: http://monitoring-kube-prometheus-prometheus:9090
+    access: proxy
+    isDefault: false
 
 ---
 

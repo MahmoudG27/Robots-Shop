@@ -10,21 +10,31 @@ spec:
       containers:
         - name: mongo-init
           image: mongo:7.0
+          env:
+            - name: MONGO_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_USERNAME
+            - name: MONGO_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: mongo-secret
+                  key: MONGO_INITDB_ROOT_PASSWORD
           command:
             - sh
             - -c
             - |
-              echo "Waiting for MongoDB..."
-              until mongosh --host mongodb:27017 --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+              until mongosh --host mongodb --username admin --password password --authenticationDatabase admin --eval "db.adminCommand('ping')" >/dev/null 2>&1; do
+                echo "Waiting for MongoDB..."
                 sleep 2
               done
 
               echo "Running init scripts..."
-              mongosh --host mongodb:27017 /scripts/users.js
-              mongosh --host mongodb:27017 /scripts/catalogue.js
-
+              mongosh --host mongodb --username admin --password password --authenticationDatabase admin /scripts/users.js
+              mongosh --host mongodb --username admin --password password --authenticationDatabase admin /scripts/catalogue.js
+              
               echo "Mongo init completed"
-          
           volumeMounts:
             - name: scripts
               mountPath: /scripts
@@ -32,16 +42,3 @@ spec:
         - name: scripts
           configMap:
             name: mongo-init-scripts
-
-
-# How many times does this job run?
-# -> Only once.
-
-# If you try to run it again:
-# -> It will duplicate keys
-# -> Or it will fail due to unique indexes.
-
-# If you need to start over:
-# kubectl delete job mongo-init
-# kubectl delete pvc mongo-data-mongodb-0
-# kubectl apply -f mongo-init-job.yaml

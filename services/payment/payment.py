@@ -9,7 +9,7 @@ import signal
 
 from flask import Flask, Response, request, jsonify
 
-from .rabbitmq import Publisher
+from rabbitmq import Publisher
 
 from prometheus_client import Counter, Histogram, generate_latest, CONTENT_TYPE_LATEST
 
@@ -131,7 +131,7 @@ def http_delete(url, retries=3, timeout=2):
 # =========================
 # RabbitMQ
 # =========================
-publisher = Publisher(app.logger, RABBITMQ_USER, RABBITMQ_PASS)
+publisher = Publisher(app.logger)
 
 
 # =========================

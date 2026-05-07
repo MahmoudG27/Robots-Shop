@@ -1,11 +1,9 @@
-version: '3.8'
-
 services:
 
 # ---------------- WEB ----------------
   web:
     build: ../../services/web
-    image: robots/web:v1.0
+    image: containerregistryrobots.azurecr.io/web:v1.0.0
     container_name: web
     ports:
       - "8080:8080"
@@ -30,7 +28,7 @@ services:
 # ---------------- CATALOGUE ----------------
   catalogue:
     build: ../../services/catalogue
-    image: robots/catalogue:v1.0
+    image: containerregistryrobots.azurecr.io/catalogue:v1.0.0
     container_name: catalogue
     environment:
       NODE_ENV: production
@@ -46,7 +44,7 @@ services:
 # ---------------- CART ----------------
   cart:
     build: ../../services/cart
-    image: robots/cart:v1.0
+    image: containerregistryrobots.azurecr.io/cart:v1.0.0
     container_name: cart
     environment:
       NODE_ENV: production
@@ -64,7 +62,7 @@ services:
 # ---------------- USER ----------------
   user:
     build: ../../services/user
-    image: robots/user:v1.0
+    image: containerregistryrobots.azurecr.io/user:v1.0.0
     container_name: user
     environment:
       NODE_ENV: production
@@ -82,7 +80,7 @@ services:
 # ---------------- SHIPPING ----------------
   shipping:
     build: ../../services/shipping
-    image: robots/shipping:v1.0
+    image: containerregistryrobots.azurecr.io/shipping:v1.0.0
     container_name: shipping
     environment:
       DB_HOST: mysql
@@ -102,7 +100,7 @@ services:
 # ---------------- PAYMENT ----------------
   payment:
     build: ../../services/payment
-    image: robots/payment:v1.0
+    image: containerregistryrobots.azurecr.io/payment:v1.0.0
     container_name: payment
     environment:
       CART_HOST: cart
@@ -126,7 +124,7 @@ services:
 # ---------------- RATINGS ----------------
   ratings:
     build: ../../services/ratings
-    image: robots/ratings:v1.0
+    image: containerregistryrobots.azurecr.io/ratings:v1.0.0
     container_name: ratings
     environment:
       REDIS_HOST: redis
@@ -148,7 +146,7 @@ services:
 # ---------------- DISPATCH ----------------
   dispatch:
     build: ../../services/dispatch
-    image: robots/dispatch:v1.0
+    image: containerregistryrobots.azurecr.io/dispatch:v1.0.0
     container_name: dispatch
     environment:
       AMQP_HOST: rabbitmq
@@ -166,7 +164,7 @@ services:
 
 # ---------------- MONGO ----------------
   mongo:
-    image: mongo:7-alpine
+    image: mongo:7.0
     environment:
       MONGO_INITDB_ROOT_USERNAME: admin
       MONGO_INITDB_ROOT_PASSWORD: admin123
@@ -194,7 +192,7 @@ services:
 # ---------------- MYSQL ----------------
   mysql:
     build: ../../services/mysql
-    image: robots/mysql:v1.0
+    image: containerregistryrobots.azurecr.io/mysql:v1.0.0
     container_name: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root

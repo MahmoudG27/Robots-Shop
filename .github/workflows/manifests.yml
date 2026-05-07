@@ -1,0 +1,63 @@
+name: Manifests CI/CD Robot-Shop
+
+on:
+  workflow_dispatch:
+
+jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      services: ${{ steps.filter.outputs.changes }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          list-files: json
+          filters: |
+            web: services/web/**
+            cart: services/cart/**
+            catalogue: services/catalogue/**
+            user: services/user/**
+            payment: services/payment/**
+            shipping: services/shipping/**
+            ratings: services/ratings/**
+            dispatch: services/dispatch/**
+
+  build:
+    needs: detect
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [web, cart, catalogue, user, payment, shipping, ratings, dispatch]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Check if changed
+        id: check
+        run: |
+          echo "changed=$(echo '${{ needs.detect.outputs.services }}' | jq -r '.${{ matrix.service }}')" >> $GITHUB_OUTPUT
+
+      - name: Login to ACR
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          echo ${{ secrets.ACR_PASSWORD }} | docker login containerregistryrobots.azurecr.io -u ${{ secrets.ACR_USERNAME }} --password-stdin
+
+      - name: Build & Push
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          docker build -t containerregistryrobots.azurecr.io/${{ matrix.service }}:${{ github.sha }} ./services/${{ matrix.service }}
+          docker push containerregistryrobots.azurecr.io/${{ matrix.service }}:${{ github.sha }}
+
+      - name: Configure Kubeconfig
+        run: |
+          echo "${{ secrets.KUBE_CONFIG }}" > kubeconfig
+          export KUBECONFIG=kubeconfig
+
+      - name: Update Kubernetes
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          kubectl set image deployment/${{ matrix.service }} \
+          ${{ matrix.service }}=containerregistryrobots.azurecr.io/${{ matrix.service }}:${{ github.sha }}
