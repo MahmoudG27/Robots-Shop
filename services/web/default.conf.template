@@ -56,6 +56,7 @@ server {
     }
 
     location /api/shipping/ {
+        rewrite ^/api/shipping/(.*)$ /$1 break;
         proxy_pass http://${SHIPPING_HOST}:8080/;
         proxy_set_header Host $http_host;
         proxy_set_header X-Real-IP $remote_addr;

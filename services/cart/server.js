@@ -139,6 +139,19 @@ redisClient.on('reconnecting', () => {
 })();
 
 // ---------- Routes ----------
+app.get('/rename/:from/:to', async (req, res) => {
+  try {
+    const data = await redisClient.get(req.params.from);
+    if (data) {
+      await redisClient.setEx(req.params.to, 3600, data);
+      await redisClient.del(req.params.from);
+    }
+    res.send('OK');
+  } catch (err) {
+    res.status(500).send(err);
+  }
+});
+
 app.get('/cart/:id', async (req, res) => {
   try {
     const data = await redisClient.get(req.params.id);

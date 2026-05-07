@@ -23,7 +23,7 @@ public class ShippingController {
     private String cartEndpoint;
 
     private String buildCartUrl(String id) {
-        return "http://" + cartEndpoint + ":8080/shipping/" + id.split(",")[0]; 
+        return "http://" + cartEndpoint + ":8080/shipping/";
     }
 
     private static final List<byte[]> bytesGlobal =

@@ -300,9 +300,9 @@
                 url: '/api/cart/cart/' + id,
                 method: 'GET'
             }).then((res) => {
-                var cart = res.data;
-                // remove shipping - last item in cart
-                if(cart.items[cart.items.length - 1].sku == 'SHIP') {
+                let cart = res.data;
+                if (cart.items && cart.items.length > 0 && 
+                    cart.items[cart.items.length - 1].sku === 'SHIP') {
                     $http({
                         url: '/api/cart/update/' + id + '/SHIP/0',
                         method: 'GET'
@@ -334,33 +334,27 @@
         $scope.data.shipping = '';
 
         $scope.calcShipping = function() {
-            console.log('calc uuid', uuid);
+            if (!$scope.data.cityId) return;
+
             $http({
-                url: '/api/shipping/calc/' + uuid,
+                url: '/api/shipping/calc/' + $scope.data.cityId,
                 method: 'GET'
             }).then((res) => {
-                console.log('shipping data', res.data);
                 $scope.data.shipping = res.data;
-                $scope.data.shipping.location = $scope.data.selectedCountry.name + ' ' + autoLocation;
+                $scope.data.shipping.location = ($scope.data.selectedCountry.name || '') + ' ' + ($scope.data.selectedLocation || '');
             }).catch((e) => {
                 console.log('ERROR', e);
             });
         };
 
         $scope.confirmShipping = function() {
-            console.log('shipping confirmed');
             $http({
                 url: '/api/shipping/confirm/' + currentUser.uniqueid,
                 method: 'POST',
                 data: $scope.data.shipping
             }).then((res) => {
-                // go to final confirmation
-                console.log('confirm cart', res.data);
-                // save new cart
                 currentUser.cart = res.data;
                 $location.url('/payment');
-            }).catch((e) => {
-                console.log('ERROR', e);
             });
         };
 
@@ -375,8 +369,9 @@
         };
 
         // auto-complete
-        var autoLocation;
-        var uuid;
+        var autoLocationInstance;
+        var selectedLocation;
+        $scope.data.cityId = null;
 
         function loadCodes() {
             $http({
@@ -390,13 +385,13 @@
         }
         
         function buildauto() {
-            autoLocation = new autoComplete({
+            autoLocationInstance = new autoComplete({
                 selector: 'input[id=location]',
                 source: (term, suggest) => {
                     console.log('autocomplete', term);
                     $scope.data.disableCalc = true;
                     $http({
-                        url: '/api/shipping/match/' + $scope.data.selectedCountry.code + '/' + term,
+                        url: '/api/shipping/match/' + $scope.data.selectedCountry.code + '/' + encodeURIComponent(term),
                         method: 'GET'
                     }).then((res) => {
                         console.log('suggest', res.data);
@@ -410,12 +405,11 @@
                     return '<div class="autocomplete-suggestion" loc-uuid="' + item.uuid + '" data-val="' + item.name + '">' + item.name + '</div>';
                 },
                 onSelect: (e, term, item) => {
-                    console.log('select', term, item);
-                    uuid = item.getAttribute('loc-uuid');
-                    autoLocation = item.getAttribute('data-val');
+                    $scope.data.cityId = item.getAttribute('loc-uuid');
+                    $scope.data.selectedLocation = item.getAttribute('data-val'); 
+
                     $scope.data.disableCalc = false;
                     $scope.data.shipping = '';
-                    // synchronise angular
                     $scope.$apply();
                 }
             });
@@ -431,33 +425,32 @@
         $scope.data.message = ' ';
         $scope.data.buttonDisabled = false;
         $scope.data.cont = false;
-        $scope.data.uniqueid = currentUser.uniqueid;
+        
         $scope.data.cart = currentUser.cart;
+
+        $scope.$watch(() => currentUser.uniqueid, (newVal) => {
+            if (newVal) {
+                $scope.data.uniqueid = newVal;
+                $scope.data.cart = currentUser.cart;
+            }
+        });
 
         $scope.pay = function() {
             $scope.data.buttonDisabled = true;
             $http({
                 url: '/api/payment/pay/' + $scope.data.uniqueid,
                 method: 'POST',
-                data: $scope.data.cart
+                data: currentUser.cart 
             }).then((res) => {
-                console.log('order', res.data);
                 $scope.data.message = 'Order placed ' + res.data.orderid;
-                // clear down cart
-                $scope.data.cart = {
-                    total: 0,
-                    items: []
-                };
-                currentUser.cart = $scope.data.cart;
+                currentUser.cart = { total: 0, items: [] };
+                $scope.data.cart = currentUser.cart;
                 $scope.data.cont = true;
             }).catch((e) => {
-                console.log('ERROR', e);
                 $scope.data.message = 'ERROR placing order';
                 $scope.data.buttonDisabled = false;
             });
         };
-
-        console.log('paymentform init');
     });
 
     robotshop.controller('loginform', function($scope, $http, currentUser) {
