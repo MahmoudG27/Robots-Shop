@@ -235,6 +235,4 @@ kubectl get svc web -n robot-shop
 
 ---
 
-**Last Updated**: February 2026
-
-For issues, feature requests, or contributions, please refer to the repository.
+For issues, feature requests, or contributions, please refer to the repository
