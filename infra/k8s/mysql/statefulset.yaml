@@ -17,6 +17,12 @@ spec:
         runAsUser: 999
         runAsGroup: 999
         fsGroup: 999
+
+      volumes:
+        - name: init-db
+          configMap:
+            name: mysql-db-dump
+
       containers:
       - name: mysql
         image: mysql:8.0
@@ -68,7 +74,3 @@ spec:
       resources:
         requests:
           storage: 10Gi
-  volumes:
-  - name: init-db
-    configMap:
-      name: mysql-db-dump
