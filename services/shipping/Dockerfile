@@ -15,7 +15,7 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /opt/shipping
 
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75"
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75.0 -XX:+TieredCompilation -XX:TieredStopAtLevel=1"
 
 COPY --from=build /build/target/*.jar app.jar
 
