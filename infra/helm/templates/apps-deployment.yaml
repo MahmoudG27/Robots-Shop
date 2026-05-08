@@ -55,7 +55,6 @@ spec:
 
           # ---------------- PROBES ----------------
           {{- if $mergedSvc.probes.enabled }}
-          {{- if $mergedSvc.probes.enabled }}
           startupProbe:
             httpGet:
               path: {{ $mergedSvc.probes.startupPath }}
