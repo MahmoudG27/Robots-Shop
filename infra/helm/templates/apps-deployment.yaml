@@ -32,7 +32,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: {{ $name }}
-          image: {{ $svc.image }}:{{ .Values.global.imageTag }}
+          image: image: {{ $svc.image }}:{{ $svc.tag | default $.Values.global.imageTag }}.
           imagePullPolicy: IfNotPresent
 
           ports:
@@ -61,23 +61,27 @@ spec:
 
           # ---------------- PROBES ----------------
           {{- if $svc.probes.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ $svc.probes.startupPath }}
+              port: {{ (index $svc.ports 0).port }}
+            failureThreshold: 30
+            periodSeconds: 5
+
           livenessProbe:
             httpGet:
               path: {{ $svc.probes.livenessPath }}
               port: {{ (index $svc.ports 0).port }}
-            initialDelaySeconds: 10
+            initialDelaySeconds: 80
             periodSeconds: 20
-            timeoutSeconds: 3
-            failureThreshold: 3
 
           readinessProbe:
             httpGet:
               path: {{ $svc.probes.readinessPath }}
               port: {{ (index $svc.ports 0).port }}
-            initialDelaySeconds: 10
+            initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
+            failureThreshold: 10
           {{- end }}
 
 ---

@@ -14,9 +14,27 @@ spec:
     spec:
       containers:
       - name: exporter
-        image: prom/mysqld-exporter:v0.15.0
-        env:
-        - name: DATA_SOURCE_NAME
-          value: exporter:exporter@(mysql:3306)/
+        image: prom/mysqld-exporter:v0.19.0
+        args:
+        - "--config.my-cnf=/etc/mysql-exporter/.my.cnf"
         ports:
-        - containerPort: 9104
+          - containerPort: 9104
+            name: metrics
+        volumeMounts:
+        - name: auth-config
+          mountPath: /etc/mysql-exporter
+          readOnly: true
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 200m
+            memory: 256Mi
+      volumes:
+      - name: auth-config
+        secret:
+          secretName: mysql-exporter-auth
+          items:
+          - key: config
+            path: .my.cnf

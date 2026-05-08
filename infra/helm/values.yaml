@@ -26,6 +26,7 @@ services:
 
     probes:
       enabled: true
+      startupPath: /health/live
       livenessPath: /health/live
       readinessPath: /health/ready
 
@@ -128,6 +129,7 @@ services:
 
     probes:
       enabled: true
+      startupPath: /_health
       livenessPath: /_health
       readinessPath: /_health
 
@@ -151,6 +153,7 @@ services:
   
     probes:
       enabled: true
+      startupPath: /actuator/health/liveness
       livenessPath: /actuator/health/liveness
       readinessPath: /actuator/health/readiness
 
@@ -226,8 +229,8 @@ databases:
 
   mysql:
     image:
-      repository: containerregistryrobots.azurecr.io/mysql
-      tag: v1.0.0
+      repository: mysql
+      tag: 8.0
     replicas: 1
     service:
       port: 3306

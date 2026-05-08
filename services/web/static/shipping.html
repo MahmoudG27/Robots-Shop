@@ -8,7 +8,7 @@
         Enter location <input id="location" type="text" size="20" ng-model="data.selectedLocation" ng-disabled="data.disableCity"/>
     </div>
     <div>
-        <button ng-click="calcShipping();" ng-disabled="data.disableCalc">Calculate</button>
+        <button ng-click="calcShipping()" ng-disabled="!data.selectedLocation">Calculate</button>
     </div>
     <!-- add in shipping distance and cost -->
     <div ng-if="data.shipping">

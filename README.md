@@ -236,3 +236,24 @@ kubectl get svc web -n robot-shop
 ---
 
 For issues, feature requests, or contributions, please refer to the repository
+
+kind load docker-image containerregistryrobots.azurecr.io/web:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/user:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/shipping:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/cart:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/catalogue:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/dispatch:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/payment:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/ratings:v1.0.0
+kind load docker-image containerregistryrobots.azurecr.io/load-gen:v1.0.0
+
+
+docker build -t containerregistryrobots.azurecr.io/web:v1.0.0 ./web -f web/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/user:v1.0.0 ./user -f user/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/shipping:v1.0.0 ./shipping -f shipping/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/cart:v1.0.0 ./cart -f cart/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/catalogue:v1.0.0 ./catalogue -f catalogue/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/dispatch:v1.0.0 ./dispatch -f dispatch/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/payment:v1.0.0 ./payment -f payment/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/ratings:v1.0.0 ./ratings -f ratings/Dockerfile
+docker build -t containerregistryrobots.azurecr.io/load-gen:v1.0.0 ./load-gen -f load-gen/Dockerfile

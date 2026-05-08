@@ -334,17 +334,22 @@
         $scope.data.shipping = '';
 
         $scope.calcShipping = function() {
-            if (!$scope.data.cityId) return;
+            let city = $scope.data.cityId;
+            
+            if(!city || city === 'undefined') {
+                city = $scope.data.selectedLocation; 
+            }
 
-            $http({
-                url: '/api/shipping/calc/' + $scope.data.cityId,
-                method: 'GET'
-            }).then((res) => {
-                $scope.data.shipping = res.data;
-                $scope.data.shipping.location = ($scope.data.selectedCountry.name || '') + ' ' + ($scope.data.selectedLocation || '');
-            }).catch((e) => {
-                console.log('ERROR', e);
-            });
+            if (city && city !== 'undefined') {
+                $http.get('/api/shipping/calc/' + city).then((res) => {
+                    $scope.data.shipping = res.data;
+                    $scope.data.shipping.location = ($scope.data.selectedCountry.name || '') + ' ' + ($scope.data.selectedLocation || '');
+                }).catch((err) => {
+                    console.error("Calculation Error:", err);
+                });
+            } else {
+                console.error("No city selected to calculate!");
+            }
         };
 
         $scope.confirmShipping = function() {
@@ -402,15 +407,22 @@
                 },
                 renderItem: (item, search) => {
                     console.log('render', item, search);
-                    return '<div class="autocomplete-suggestion" loc-uuid="' + item.uuid + '" data-val="' + item.name + '">' + item.name + '</div>';
+                    return '<div class="autocomplete-suggestion" data-id="' + item.id + '" loc-uuid="' + item.id + '" data-val="' + item.name + '">' + item.name + '</div>';
                 },
                 onSelect: (e, term, item) => {
-                    $scope.data.cityId = item.getAttribute('loc-uuid');
-                    $scope.data.selectedLocation = item.getAttribute('data-val'); 
 
-                    $scope.data.disableCalc = false;
-                    $scope.data.shipping = '';
-                    $scope.$apply();
+                    const cityId = item.getAttribute('data-id') || item.getAttribute('loc-uuid');
+                    const cityName = item.getAttribute('data-val') || term;
+
+                    $scope.$apply(() => {
+                        $scope.data.cityId = cityId;
+                        $scope.data.selectedLocation = cityName;
+                        
+                        $scope.data.disableCalc = false;
+                        $scope.data.shipping = '';
+                        
+                        console.log("Found ID:", cityId);
+                    });
                 }
             });
         }

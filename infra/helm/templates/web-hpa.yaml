@@ -1,4 +1,4 @@
-{{- if $svc.hpa.enabled }}
+{{- if .Values.web.hpa.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

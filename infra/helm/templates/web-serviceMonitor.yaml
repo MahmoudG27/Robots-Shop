@@ -1,18 +1,4 @@
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  name: web-monitor
-  labels:
-    release: monitoring
-spec:
-  selector:
-    matchLabels:
-      app: web
-  endpoints:
-    - port: metrics
-      interval: 15s
-
-{{- if $svc.serviceMonitor.enabled }}
+{{- if .Values.web.serviceMonitor.enabled }}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
