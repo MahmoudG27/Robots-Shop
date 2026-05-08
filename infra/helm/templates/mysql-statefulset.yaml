@@ -9,7 +9,7 @@ spec:
     fsGroup: 999
 
   serviceName: "mysql"
-  replicas: {{ .Values.mysql.replicas }}
+  replicas: {{ .Values.databases.mysql.replicas }}
   selector:
     matchLabels:
       app: mysql
@@ -20,7 +20,7 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: "{{ .Values.mysql.image.repository }}:{{ .Values.mysql.image.tag }}"
+        image: "{{ .Values.databases.mysql.image.repository }}:{{ .Values.databases.mysql.image.tag }}"
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
@@ -66,4 +66,4 @@ spec:
       storageClassName: {{ .Values.storageClassName }}
       resources:
         requests:
-          storage: {{ .Values.mysql.storage }}
+          storage: {{ .Values.databases.mysql.storage }}

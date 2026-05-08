@@ -7,8 +7,8 @@ metadata:
 spec:
   ports:
   - name: redis
-    port: {{ .Values.redis.service.port }}
-    targetPort: {{ .Values.redis.service.port }}
+    port: {{ .Values.cache.redis.service.port }}
+    targetPort: {{ .Values.cache.redis.service.port }}
   clusterIP: None
   selector:
     app: redis

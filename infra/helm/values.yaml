@@ -137,6 +137,20 @@ services:
       enabled: true
 
   shipping:
+    resources:
+      requests:
+        cpu: 500m
+        memory: 512Mi
+      limits:
+        cpu: 1000m
+        memory: 1024Mi
+    probes:
+      enabled: true
+      startupPath: /actuator/health/liveness
+      livenessPath: /actuator/health/liveness
+      readinessPath: /actuator/health/readiness
+      startupInitialDelaySeconds: 30
+
     image: containerregistryrobots.azurecr.io/shipping
     tag: v1.0.0
 
@@ -146,16 +160,12 @@ services:
       DB_PORT: "3306"
       DB_NAME: cities
       DB_USER: shipping
+
     secrets:
       - name: DB_PASSWORD
         secret: mysql-secret
         key: shipping-password
-  
-    probes:
-      enabled: true
-      startupPath: /actuator/health/liveness
-      livenessPath: /actuator/health/liveness
-      readinessPath: /actuator/health/readiness
+
 
     hpa:
       enabled: true
@@ -209,12 +219,12 @@ web:
     minReplicas: 1
     maxReplicas: 3
     cpuUtilization: 70
-
+      
   serviceMonitor:
     enabled: true
     path: /metrics
     interval: 15s
-    port: metrics
+    port: exp-metrics
 
 # ---------------- INFRA ----------------
 databases:

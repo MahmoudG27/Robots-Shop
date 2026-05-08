@@ -6,7 +6,7 @@ metadata:
     app: mongodb
 spec:
   serviceName: mongodb
-  replicas: {{ .Values.mongodb.replicas }}
+  replicas: {{ .Values.databases.mongodb.replicas }}
   selector:
     matchLabels:
       app: mongodb
@@ -18,9 +18,9 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: mongodb
-        image: "{{ .Values.mongodb.image }}:{{ .Values.mongodb.tag }}"
+        image: "{{ .Values.databases.mongodb.image.repository }}:{{ .Values.databases.mongodb.image.tag }}"
         ports:
-        - containerPort: {{ .Values.mongodb.service.port }}
+        - containerPort: {{ .Values.databases.mongodb.service.port }}
           name: mongo
         env:
         - name: MONGO_INITDB_ROOT_USERNAME
@@ -75,4 +75,4 @@ spec:
       storageClassName: {{ .Values.storageClassName }}
       resources:
         requests:
-          storage: {{ .Values.mongodb.storage }}
+          storage: {{ .Values.databases.mongodb.storage }}

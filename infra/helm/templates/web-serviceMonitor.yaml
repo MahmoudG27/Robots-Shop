@@ -5,15 +5,13 @@ metadata:
   name: web-monitor
   labels:
     app: web
-    release: monitoring
+    release: monitoring 
 spec:
   selector:
     matchLabels:
       app: web
-
   endpoints:
     - port: {{ .Values.web.serviceMonitor.port }}
       path: {{ .Values.web.serviceMonitor.path }}
       interval: {{ .Values.web.serviceMonitor.interval }}
----
 {{- end }}

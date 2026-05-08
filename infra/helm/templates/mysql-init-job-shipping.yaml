@@ -37,12 +37,8 @@ spec:
           CREATE DATABASE IF NOT EXISTS cities;
           CREATE USER IF NOT EXISTS 'shipping'@'%' IDENTIFIED BY '${MYSQL_SHIPPING_PASSWORD}';
           GRANT ALL PRIVILEGES ON cities.* TO 'shipping'@'%';
-          CREATE USER 'exporter'@'%' IDENTIFIED BY 'exporter';
+          CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY 'exporter';
           GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
           FLUSH PRIVILEGES;
           EOF
       restartPolicy: OnFailure
-
-          # ALTER TABLE cities MODIFY COLUMN uuid BIGINT NOT NULL AUTO_INCREMENT;
-          # ALTER TABLE cities MODIFY COLUMN latitude DOUBLE;
-          # ALTER TABLE cities MODIFY COLUMN longitude DOUBLE;

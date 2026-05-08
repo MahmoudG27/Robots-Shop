@@ -15,5 +15,5 @@ spec:
               service:
                 name: web
                 port:
-                  number: {{ .Values.web.ports[0].port }}
+                  number: {{ (index .Values.web.ports 0).port }}
 {{- end }}

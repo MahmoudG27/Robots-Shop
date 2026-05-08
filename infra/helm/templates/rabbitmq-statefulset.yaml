@@ -6,7 +6,7 @@ metadata:
     app: rabbitmq
 spec:
   serviceName: rabbitmq
-  replicas: {{ .Values.rabbitmq.replicas }}
+  replicas: {{ .Values.messaging.rabbitmq.replicas }}
   selector:
     matchLabels:
       app: rabbitmq
@@ -17,14 +17,14 @@ spec:
     spec:
       containers:
       - name: rabbitmq
-        image: "{{ .Values.rabbitmq.image.repository }}:{{ .Values.rabbitmq.image.tag }}"
+        image: "{{ .Values.messaging.rabbitmq.image.repository }}:{{ .Values.messaging.rabbitmq.image.tag }}"
 
         ports:
-        - containerPort: {{ .Values.rabbitmq.service.amqpPort }}
+        - containerPort: {{ .Values.messaging.rabbitmq.service.amqpPort }}
           name: amqp
-        - containerPort: {{ .Values.rabbitmq.service.managementPort }}
+        - containerPort: {{ .Values.messaging.rabbitmq.service.managementPort }}
           name: management
-        - containerPort: {{ .Values.rabbitmq.service.metricsPort }}
+        - containerPort: {{ .Values.messaging.rabbitmq.service.metricsPort }}
           name: metrics
 
         env:
@@ -74,4 +74,4 @@ spec:
       storageClassName: {{ .Values.storageClassName }}
       resources:
         requests:
-          storage: {{ .Values.rabbitmq.storage }}
+          storage: {{ .Values.messaging.rabbitmq.storage }}

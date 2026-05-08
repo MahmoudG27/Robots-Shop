@@ -6,8 +6,8 @@ metadata:
     app: mysql
 spec:
   ports:
-  - port: {{ .Values.mysql.service.port }}
-    targetPort: {{ .Values.mysql.service.port }}
+  - port: {{ .Values.databases.mysql.service.port }}
+    targetPort: {{ .Values.databases.mysql.service.port }}
   clusterIP: None
   selector:
     app: mysql

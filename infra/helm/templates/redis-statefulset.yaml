@@ -6,7 +6,7 @@ metadata:
     app: redis
 spec:
   serviceName: redis
-  replicas: {{ .Values.redis.replicas }}
+  replicas: {{ .Values.cache.redis.replicas }}
   selector:
     matchLabels:
       app: redis
@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: redis
-        image: "{{ .Values.redis.image.repository }}:{{ .Values.redis.image.tag }}"
+        image: "{{ .Values.cache.redis.image.repository }}:{{ .Values.cache.redis.image.tag }}"
 
         command:
           - redis-server
@@ -25,7 +25,7 @@ spec:
           - "yes"
 
         ports:
-        - containerPort: {{ .Values.redis.service.port }}
+        - containerPort: {{ .Values.cache.redis.service.port }}
 
         volumeMounts:
         - name: redis-data
@@ -59,4 +59,4 @@ spec:
       storageClassName: {{ .Values.storageClassName }}
       resources:
         requests:
-          storage: {{ .Values.redis.storage }}
+          storage: {{ .Values.cache.redis.storage }}

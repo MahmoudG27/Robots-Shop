@@ -1,10 +1,10 @@
 {{- range $name, $svc := .Values.services }}
+{{- if ne $name "defaults" }}
+{{- $svc = merge $svc $.Values.services.defaults }}
 apiVersion: v1
 kind: Service
 metadata:
   name: {{ $name }}
-  labels:
-    app: {{ $name }}
 spec:
   type: ClusterIP
   selector:
@@ -16,4 +16,5 @@ spec:
       targetPort: {{ $p.port }}
     {{- end }}
 ---
+{{- end }}
 {{- end }}

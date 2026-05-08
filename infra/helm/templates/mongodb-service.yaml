@@ -10,5 +10,5 @@ spec:
     app: mongodb
   ports:
   - name: mongo
-    port: {{ .Values.mongodb.service.port }}
-    targetPort: {{ .Values.mongodb.service.port }}
+    port: {{ .Values.databases.mongodb.service.port }}
+    targetPort: {{ .Values.databases.mongodb.service.port }}

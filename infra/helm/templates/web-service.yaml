@@ -6,13 +6,11 @@ metadata:
     app: web
 spec:
   type: ClusterIP
-
   selector:
     app: web
-
   ports:
     {{- range .Values.web.ports }}
     - name: {{ .name }}
       port: {{ .port }}
-      targetPort: {{ .name }}
+      targetPort: {{ .port }}
     {{- end }}

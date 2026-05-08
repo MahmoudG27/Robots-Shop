@@ -10,11 +10,11 @@ spec:
     app: rabbitmq
   ports:
   - name: amqp
-    port: {{ .Values.rabbitmq.service.amqpPort }}
-    targetPort: {{ .Values.rabbitmq.service.amqpPort }}
+    port: {{ .Values.messaging.rabbitmq.service.amqpPort }}
+    targetPort: {{ .Values.messaging.rabbitmq.service.amqpPort }}
   - name: management
-    port: {{ .Values.rabbitmq.service.managementPort }}
-    targetPort: {{ .Values.rabbitmq.service.managementPort }}
+    port: {{ .Values.messaging.rabbitmq.service.managementPort }}
+    targetPort: {{ .Values.messaging.rabbitmq.service.managementPort }}
   - name: metrics
-    port: {{ .Values.rabbitmq.service.metricsPort }}
-    targetPort: {{ .Values.rabbitmq.service.metricsPort }}
+    port: {{ .Values.messaging.rabbitmq.service.metricsPort }}
+    targetPort: {{ .Values.messaging.rabbitmq.service.metricsPort }}

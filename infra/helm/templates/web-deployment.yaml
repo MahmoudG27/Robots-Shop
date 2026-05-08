@@ -6,38 +6,29 @@ metadata:
     app: web
 spec:
   replicas: {{ .Values.web.replicas }}
-
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 1
-
-  revisionHistoryLimit: 5
-
   selector:
     matchLabels:
       app: web
-
   template:
     metadata:
       labels:
         app: web
-
     spec:
       terminationGracePeriodSeconds: 30
-
       containers:
         # ---------------- NGINX EXPORTER ----------------
         - name: nginx-exporter
           image: nginx/nginx-prometheus-exporter:latest
           args:
             - -nginx.scrape-uri=http://localhost:{{ (index .Values.web.ports 0).port }}/stub_status
-
           ports:
-            - name: metrics
+            - name: exp-metrics
               containerPort: {{ (index .Values.web.ports 1).port }}
-
           resources:
             requests:
               cpu: 25m
@@ -50,40 +41,30 @@ spec:
         - name: web
           image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
           imagePullPolicy: IfNotPresent
-
-          securityContext:
-            runAsNonRoot: true
-            runAsUser: 1000
-
+          # securityContext:
+          #   runAsNonRoot: true
+          #   runAsUser: 1000
           ports:
             {{- range .Values.web.ports }}
             - name: {{ .name }}
               containerPort: {{ .port }}
             {{- end }}
-
           env:
             {{- range $key, $value := .Values.web.env }}
             - name: {{ $key }}
               value: "{{ $value }}"
             {{- end }}
-
           resources:
             {{- toYaml .Values.web.resources | nindent 12 }}
-
           readinessProbe:
             httpGet:
               path: {{ .Values.web.probes.readinessPath }}
-              port: {{ (index .Values.web.ports 0).name }}
+              port: {{ (index .Values.web.ports 0).port }}
             initialDelaySeconds: 5
             periodSeconds: 10
-            timeoutSeconds: 3
-            failureThreshold: 3
-
           livenessProbe:
             httpGet:
               path: {{ .Values.web.probes.livenessPath }}
-              port: {{ (index .Values.web.ports 0).name }}
+              port: {{ (index .Values.web.ports 0).port }}
             initialDelaySeconds: 10
             periodSeconds: 20
-            timeoutSeconds: 3
-            failureThreshold: 3
