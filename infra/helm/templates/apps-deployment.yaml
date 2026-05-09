@@ -36,17 +36,17 @@ spec:
 
           # ---------------- ENV ----------------
           env:
-            {{- range $key, $value := $mergedSvc.env }}
-            - name: {{ $key }}
-              value: {{ $value | quote }}
-            {{- end }}
-
             {{- range $s := $mergedSvc.secrets }}
             - name: {{ $s.name }}
               valueFrom:
                 secretKeyRef:
                   name: {{ $s.secret }}
                   key: {{ $s.key }}
+            {{- end }}
+
+            {{- range $key, $value := $mergedSvc.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
             {{- end }}
 
           # ---------------- RESOURCES ----------------

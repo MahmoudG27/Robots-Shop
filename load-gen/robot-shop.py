@@ -6,7 +6,6 @@ from random import choice, randint
 
 
 class UserBehavior(HttpUser):
-    # 🔥 better for load testing (not too slow, not too aggressive)
     wait_time = between(0.5, 2)
 
     fake_ip_addresses = [
@@ -25,12 +24,10 @@ class UserBehavior(HttpUser):
     @task
     def login(self):
         fake_ip = random.choice(self.fake_ip_addresses)
-
         credentials = {
             'name': 'user',
             'password': 'password'
         }
-
         res = self.client.post(
             '/api/user/login',
             json=credentials,
@@ -41,15 +38,14 @@ class UserBehavior(HttpUser):
     @task
     def load(self):
         fake_ip = random.choice(self.fake_ip_addresses)
-
         self.client.get('/', headers={'x-forwarded-for': fake_ip})
 
-        user = self.client.get(
+        user_res = self.client.get(
             '/api/user/uniqueid',
             headers={'x-forwarded-for': fake_ip}
         ).json()
 
-        uniqueid = user['uuid']
+        uniqueid = user_res.get('uuid') or user_res.get('name') or 'anonymous'
 
         self.client.get('/api/catalogue/categories', headers={'x-forwarded-for': fake_ip})
 
@@ -60,7 +56,6 @@ class UserBehavior(HttpUser):
 
         for i in range(2):
             item = None
-
             while True:
                 item = choice(products)
                 if item['instock'] != 0:
@@ -81,7 +76,6 @@ class UserBehavior(HttpUser):
             headers={'x-forwarded-for': fake_ip}
         ).json()
 
-        # 🔥 FIX: avoid crash if cart empty
         if cart.get('items'):
             item = choice(cart['items'])
             self.client.get(
@@ -92,25 +86,32 @@ class UserBehavior(HttpUser):
             print(f'Cart empty for user {uniqueid}')
 
         code = choice(self.client.get('/api/shipping/codes').json())
-        city = choice(self.client.get(f'/api/shipping/cities/{code["code"]}').json())
+        
+        cities_res = self.client.get(f'/api/shipping/cities/{code["code"]}').json()
+        
+        if len(cities_res) > 0:
+            city = choice(cities_res)
+            city_id = city.get('id') or city.get('city_id') 
 
-        shipping = self.client.get(
-            f'/api/shipping/calc/{city["uuid"]}'
-        ).json()
+            shipping = self.client.get(
+                f'/api/shipping/calc/{city_id}'
+            ).json()
 
-        shipping['location'] = f'{code["name"]} {city["name"]}'
+            shipping['location'] = f'{code["name"]} {city["name"]}'
 
-        cart = self.client.post(
-            f'/api/shipping/confirm/{uniqueid}',
-            json=shipping
-        ).json()
+            cart = self.client.post(
+                f'/api/shipping/confirm/{uniqueid}',
+                json=shipping
+            ).json()
 
-        order = self.client.post(
-            f'/api/payment/pay/{uniqueid}',
-            json=cart
-        ).json()
+            order = self.client.post(
+                f'/api/payment/pay/{uniqueid}',
+                json=cart
+            ).json()
 
-        print('Order {}'.format(order))
+            print('Order {}'.format(order))
+        else:
+            print(f'No cities found for {code["code"]}')
 
     @task
     def error(self):

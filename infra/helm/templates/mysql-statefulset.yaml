@@ -3,11 +3,6 @@ kind: StatefulSet
 metadata:
   name: mysql
 spec:
-  securityContext:
-    runAsUser: 999
-    runAsGroup: 999
-    fsGroup: 999
-
   serviceName: "mysql"
   replicas: {{ .Values.databases.mysql.replicas }}
   selector:
@@ -18,12 +13,24 @@ spec:
       labels:
         app: mysql
     spec:
+      securityContext:
+        runAsUser: 999
+        runAsGroup: 999
+        fsGroup: 999
+
+      volumes:
+      - name: init-db
+        configMap:
+          name: mysql-db-dump
+
       containers:
       - name: mysql
         image: "{{ .Values.databases.mysql.image.repository }}:{{ .Values.databases.mysql.image.tag }}"
         volumeMounts:
         - name: mysql-persistent-storage
           mountPath: /var/lib/mysql
+        - name: init-db
+          mountPath: /docker-entrypoint-initdb.d
 
         env:
         - name: MYSQL_ROOT_PASSWORD
