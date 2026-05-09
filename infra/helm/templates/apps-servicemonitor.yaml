@@ -11,6 +11,10 @@ metadata:
     app: {{ $name }}
     release: monitoring
 spec:
+  namespaceSelector:
+    matchNames:
+      - {{ $.Values.global.namespace | default "default" }}
+      
   selector:
     matchLabels:
       app: {{ $name }}
