@@ -58,6 +58,9 @@ services:
       CATALOGUE_HOST: catalogue
       CART_SERVER_PORT: "8080"
 
+    serviceMonitor:
+      enabled: true
+
     hpa:
       enabled: true
 
@@ -79,6 +82,9 @@ services:
         secret: mongo-secret
         key: MONGO_INITDB_ROOT_PASSWORD
 
+    serviceMonitor:
+      enabled: true
+
     hpa:
       enabled: true
 
@@ -89,6 +95,9 @@ services:
     env:
       AMQP_HOST: rabbitmq
       DISPATCH_ERROR_PERCENT: "0"
+
+    serviceMonitor:
+      enabled: true
 
     hpa:
       enabled: false
@@ -112,6 +121,9 @@ services:
       - name: RABBITMQ_PASS
         secret: rabbitmq-secret
         key: RABBITMQ_DEFAULT_PASS
+
+    serviceMonitor:
+      enabled: true
 
     hpa:
       enabled: false
@@ -142,6 +154,9 @@ services:
       startupPath: /_health
       livenessPath: /_health
       readinessPath: /_health
+
+    serviceMonitor:
+      enabled: true
 
     hpa:
       enabled: true
@@ -176,6 +191,8 @@ services:
         secret: mysql-secret
         key: shipping-password
 
+    serviceMonitor:
+      enabled: true
 
     hpa:
       enabled: true
@@ -196,6 +213,9 @@ services:
       - name: MONGO_PASS
         secret: mongo-secret
         key: MONGO_INITDB_ROOT_PASSWORD
+
+    serviceMonitor:
+      enabled: true
 
     hpa:
       enabled: true

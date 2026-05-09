@@ -43,7 +43,7 @@ spec:
               key: ratings-password
 
         - name: CATALOGUE_URL
-          value: "http://catalogue:8080/"
+          value: "http://catalogue:8080"
 
         resources:
           requests:

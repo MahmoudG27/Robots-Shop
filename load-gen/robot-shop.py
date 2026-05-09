@@ -38,84 +38,166 @@ class UserBehavior(HttpUser):
     @task
     def load(self):
         fake_ip = random.choice(self.fake_ip_addresses)
-        self.client.get('/', headers={'x-forwarded-for': fake_ip})
+        headers = {'x-forwarded-for': fake_ip}
 
-        user_res = self.client.get(
-            '/api/user/uniqueid',
-            headers={'x-forwarded-for': fake_ip}
-        ).json()
+        try:
+            # Home
+            self.client.get('/', headers=headers)
 
-        uniqueid = user_res.get('uuid') or user_res.get('name') or 'anonymous'
+            # Unique ID
+            res = self.client.get('/api/user/uniqueid', headers=headers)
 
-        self.client.get('/api/catalogue/categories', headers={'x-forwarded-for': fake_ip})
+            if res.status_code != 200:
+                print(f'Unique ID failed: {res.status_code}')
+                return
 
-        products = self.client.get(
-            '/api/catalogue/products',
-            headers={'x-forwarded-for': fake_ip}
-        ).json()
+            try:
+                user_data = res.json()
+                uniqueid = user_data.get('uuid') or user_data.get('name') or 'anonymous'
+            except Exception:
+                uniqueid = res.text if res.text else 'anonymous'
 
-        for i in range(2):
-            item = None
+            # Categories
+            self.client.get('/api/catalogue/categories', headers=headers)
+
+            # Products
+            res = self.client.get('/api/catalogue/products', headers=headers)
+
+            if res.status_code != 200:
+                print(f'Products failed: {res.status_code}')
+                return
+
+            try:
+                products = res.json()
+            except Exception:
+                print('Invalid products JSON')
+                return
+
             if not products:
-                print("No products found in catalogue")
-                break
-                
-            while True:
-                item = choice(products)
-                if item.get('instock', 0) != 0:
-                    break
+                print('No products found')
+                return
 
-            if randint(1, 10) <= 3:
-                self.client.put(
-                    f'/api/ratings/api/rate/{item["sku"]}/{randint(1, 5)}',
-                    headers={'x-forwarded-for': fake_ip}
+            in_stock_products = [
+                p for p in products if p.get('instock', 0) > 0
+            ]
+
+            if not in_stock_products:
+                print('No in-stock products')
+                return
+
+            # Shopping flow
+            for _ in range(2):
+                item = choice(in_stock_products)
+
+                if randint(1, 10) <= 3:
+                    self.client.put(
+                        f'/api/ratings/api/rate/{item["sku"]}/{randint(1,5)}',
+                        headers=headers
+                    )
+
+                self.client.get(
+                    f'/api/catalogue/product/{item["sku"]}',
+                    headers=headers
                 )
 
-            self.client.get(f'/api/catalogue/product/{item["sku"]}', headers={'x-forwarded-for': fake_ip})
-            self.client.get(f'/api/ratings/api/fetch/{item["sku"]}', headers={'x-forwarded-for': fake_ip})
-            self.client.get(f'/api/cart/add/{uniqueid}/{item["sku"]}/1', headers={'x-forwarded-for': fake_ip})
+                self.client.get(
+                    f'/api/ratings/api/fetch/{item["sku"]}',
+                    headers=headers
+                )
 
-        cart = self.client.get(
-            f'/api/cart/cart/{uniqueid}',
-            headers={'x-forwarded-for': fake_ip}
-        ).json()
+                self.client.get(
+                    f'/api/cart/add/{uniqueid}/{item["sku"]}/2',
+                    headers=headers
+                )
 
-        if cart.get('items'):
-            item = choice(cart['items'])
-            self.client.get(
-                f'/api/cart/update/{uniqueid}/{item["sku"]}/2',
-                headers={'x-forwarded-for': fake_ip}
+            # Cart
+            res = self.client.get(
+                f'/api/cart/cart/{uniqueid}',
+                headers=headers
             )
-        else:
-            print(f'Cart empty for user {uniqueid}')
 
-        code = choice(self.client.get('/api/shipping/codes').json())
-        
-        cities_res = self.client.get(f'/api/shipping/cities/{code["code"]}').json()
-        
-        if len(cities_res) > 0:
-            city = choice(cities_res)
-            city_id = city.get('id') or city.get('city_id') 
+            if res.status_code != 200:
+                return
 
-            shipping = self.client.get(
-                f'/api/shipping/calc/{city_id}'
-            ).json()
+            cart = res.json()
+
+            if cart.get('items'):
+                item = choice(cart['items'])
+
+                self.client.get(
+                    f'/api/cart/add/{uniqueid}/{item["sku"]}/2',
+                    headers=headers
+                )
+
+            # Shipping
+            res = self.client.get('/api/shipping/codes', headers=headers)
+
+            if res.status_code != 200:
+                return
+
+            codes = res.json()
+
+            if not codes:
+                return
+
+            code = choice(codes)
+
+            res = self.client.get(
+                f'/api/shipping/cities/{code["code"]}',
+                headers=headers
+            )
+
+            if res.status_code != 200:
+                return
+
+            cities = res.json()
+
+            if not cities:
+                print(f'No cities for {code["code"]}')
+                return
+
+            city = choice(cities)
+            city_id = city.get('id') or city.get('city_id')
+
+            if not city_id:
+                return
+
+            # Calculate shipping
+            res = self.client.get(
+                f'/api/shipping/calc/{city_id}',
+                headers=headers
+            )
+
+            if res.status_code != 200:
+                return
+
+            shipping = res.json()
 
             shipping['location'] = f'{code["name"]} {city["name"]}'
 
-            cart = self.client.post(
+            # Confirm shipping
+            res = self.client.post(
                 f'/api/shipping/confirm/{uniqueid}',
-                json=shipping
-            ).json()
+                json=shipping,
+                headers=headers
+            )
 
-            order = self.client.post(
+            if res.status_code != 200:
+                return
+
+            cart = res.json()
+
+            # Payment
+            res = self.client.post(
                 f'/api/payment/pay/{uniqueid}',
-                json=cart
-            ).json()
+                json=cart,
+                headers=headers
+            )
 
-            print('Order {}'.format(order))
-        else:
-            print(f'No cities found for {code["code"]}')
+            print(f'Payment status: {res.status_code}')
+
+        except Exception as e:
+            print(f'Unexpected error in load task: {e}')
 
     @task
     def error(self):
