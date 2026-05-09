@@ -192,10 +192,10 @@ services:
         key: shipping-password
 
     serviceMonitor:
-    enabled: true
-    path: /actuator/prometheus
-    interval: 15s
-    port: http
+      enabled: true
+      path: /actuator/prometheus
+      interval: 15s
+      port: http
 
     hpa:
       enabled: true
@@ -232,8 +232,6 @@ web:
   ports:
     - name: http
       port: 8080
-    - name: exp-metrics
-      port: 9113
 
   env:
     CATALOGUE_HOST: catalogue

@@ -4,6 +4,9 @@ FROM php:7.4-apache
 RUN apt-get update && apt-get install -y --no-install-recommends \
     unzip \
     libzip-dev \
+    libssl-dev \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-install pdo_mysql opcache zip \
     && rm -rf /var/lib/apt/lists/*
 

@@ -27,8 +27,8 @@ spec:
           args:
             - -nginx.scrape-uri=http://localhost:{{ (index .Values.web.ports 0).port }}/stub_status
           ports:
-            - name: exp-metrics
-              containerPort: {{ (index .Values.web.ports 1).port }}
+          - name: exp-metrics
+            containerPort: 9113
           resources:
             requests:
               cpu: 25m
@@ -41,9 +41,6 @@ spec:
         - name: web
           image: "{{ .Values.web.image }}:{{ .Values.web.tag }}"
           imagePullPolicy: IfNotPresent
-          # securityContext:
-          #   runAsNonRoot: true
-          #   runAsUser: 1000
           ports:
             {{- range .Values.web.ports }}
             - name: {{ .name }}

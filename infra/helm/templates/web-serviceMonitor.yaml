@@ -11,7 +11,7 @@ spec:
     matchLabels:
       app: web
   endpoints:
-    - port: {{ .Values.web.serviceMonitor.port }}
-      path: {{ .Values.web.serviceMonitor.path }}
+    - port: exp-metrics
+      path: /metrics
       interval: {{ .Values.web.serviceMonitor.interval }}
 {{- end }}
