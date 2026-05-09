@@ -192,7 +192,10 @@ services:
         key: shipping-password
 
     serviceMonitor:
-      enabled: true
+    enabled: true
+    path: /actuator/prometheus
+    interval: 15s
+    port: http
 
     hpa:
       enabled: true
@@ -229,7 +232,7 @@ web:
   ports:
     - name: http
       port: 8080
-    - name: metrics
+    - name: exp-metrics
       port: 9113
 
   env:
