@@ -15,6 +15,10 @@ spec:
       labels:
         app: mongodb
     spec:
+      volumes:
+      - name: init-scripts
+        configMap:
+          name: mongo-init-scripts
       terminationGracePeriodSeconds: 30
       containers:
       - name: mongodb
@@ -36,8 +40,10 @@ spec:
               key: MONGO_INITDB_ROOT_PASSWORD
 
         volumeMounts:
-        - name: mongo-data
-          mountPath: /data/db
+          - name: mongo-data
+            mountPath: /data/db
+          - name: init-scripts
+            mountPath: /docker-entrypoint-initdb.d/
 
         resources:
           requests:
