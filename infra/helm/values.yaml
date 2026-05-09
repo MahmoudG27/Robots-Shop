@@ -130,7 +130,7 @@ services:
       MYSQL_PORT: "3306"
       MYSQL_DB: ratings
       MYSQL_USER: ratings
-      CATALOGUE_URL: "http://catalogue:8080/"
+      CATALOGUE_URL: "http://catalogue:8080"
     
     secrets:
       - name: MYSQL_PASSWORD

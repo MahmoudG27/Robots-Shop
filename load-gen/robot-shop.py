@@ -56,9 +56,13 @@ class UserBehavior(HttpUser):
 
         for i in range(2):
             item = None
+            if not products:
+                print("No products found in catalogue")
+                break
+                
             while True:
                 item = choice(products)
-                if item['instock'] != 0:
+                if item.get('instock', 0) != 0:
                     break
 
             if randint(1, 10) <= 3:
