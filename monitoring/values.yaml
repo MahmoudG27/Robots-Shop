@@ -9,14 +9,13 @@ grafana:
     enabled: true
     size: 5Gi
 
-  defaultDashboardsEnabled: false
+  defaultDashboardsEnabled: true
 
   additionalDataSources:
   - name: Prometheus
     type: prometheus
     url: http://monitoring-kube-prometheus-prometheus:9090
     access: proxy
-    isDefault: true
 
 ---
 
