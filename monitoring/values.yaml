@@ -1,69 +1,82 @@
-grafana:
-  adminUser: admin
-  adminPassword: admin123
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: monitoring
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://prometheus-community.github.io/helm-charts
+    chart: kube-prometheus-stack
+    targetRevision: 84.5.0
+    helm:
+      values: |
+        grafana:
+          adminUser: admin
+          adminPassword: admin123
+          forceDeployDatasources: true
+          forceDeployDashboards: true
+          ingress:
+            enabled: false
+          persistence:
+            enabled: true
+            size: 5Gi
+          defaultDashboardsEnabled: true
+          additionalDataSources:
+            - name: Prometheus
+              type: prometheus
+              url: http://monitoring-kube-prometheus-prometheus:9090
+              access: proxy
+              isDefault: true
 
-  forceDeployDatasources: true
-  forceDeployDashboards: true
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: standard
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 10Gi
+            retention: 7d
+            resources:
+              requests:
+                memory: 400Mi
+                cpu: 200m
+              limits:
+                memory: 800Mi
+                cpu: 500m
 
-  ingress:
-    enabled: false
+        alertmanager:
+          enabled: true
+          alertmanagerSpec:
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: standard
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 2Gi
 
-  persistence:
-    enabled: true
-    size: 5Gi
+        kube-state-metrics:
+          enabled: true
 
-  defaultDashboardsEnabled: true
+        nodeExporter:
+          enabled: true
 
-  additionalDataSources:
-    - name: Prometheus
-      type: prometheus
-      url: http://monitoring-kube-prometheus-prometheus:9090
-      access: proxy
-      isDefault: false
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
 
-prometheus:
-  prometheusSpec:
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: standard
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 10Gi
-
-    retention: 7d
-
-    serviceMonitorSelectorNilUsesHelmValues: false
-
-    resources:
-      requests:
-        memory: 400Mi
-        cpu: 200m
-      limits:
-        memory: 800Mi
-        cpu: 500m
-
-alertmanager:
-  enabled: true
-
-  alertmanagerSpec:
-    storage:
-      volumeClaimTemplate:
-        spec:
-          storageClassName: standard
-          accessModes:
-            - ReadWriteOnce
-          resources:
-            requests:
-              storage: 2Gi
-
-kube-state-metrics:
-  enabled: true
-
-nodeExporter:
-  enabled: true
-
-metricsServer:
-  enabled: true
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
