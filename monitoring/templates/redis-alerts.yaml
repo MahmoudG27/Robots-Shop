@@ -3,7 +3,7 @@ kind: PrometheusRule
 metadata:
   name: redis-alerts
   labels:
-    release: kube-prometheus-stack
+    release: monitoring
 spec:
   groups:
   - name: redis.rules
