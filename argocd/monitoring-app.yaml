@@ -3,18 +3,70 @@ kind: Application
 metadata:
   name: monitoring
   namespace: argocd
-
 spec:
   project: default
-
   source:
     repoURL: https://prometheus-community.github.io/helm-charts
     chart: kube-prometheus-stack
     targetRevision: 84.5.0
-
     helm:
-      valueFiles:
-        - https://raw.githubusercontent.com/MahmoudG27/Robots-Shop/master/monitoring/values.yaml
+      values: |
+        grafana:
+          adminUser: admin
+          adminPassword: admin123
+          forceDeployDatasources: true
+          forceDeployDashboards: true
+          ingress:
+            enabled: false
+          persistence:
+            enabled: true
+            size: 5Gi
+          defaultDashboardsEnabled: true
+          additionalDataSources:
+            - name: Prometheus
+              type: prometheus
+              url: http://monitoring-kube-prometheus-prometheus:9090
+              access: proxy
+              isDefault: true
+
+        prometheus:
+          prometheusSpec:
+            serviceMonitorSelectorNilUsesHelmValues: false
+            storageSpec:
+              volumeClaimTemplate:
+                spec:
+                  storageClassName: standard
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 10Gi
+            retention: 7d
+            resources:
+              requests:
+                memory: 400Mi
+                cpu: 200m
+              limits:
+                memory: 800Mi
+                cpu: 500m
+
+        alertmanager:
+          enabled: true
+          alertmanagerSpec:
+            storage:
+              volumeClaimTemplate:
+                spec:
+                  accessModes:
+                    - ReadWriteOnce
+                  resources:
+                    requests:
+                      storage: 2Gi
+
+        kube-state-metrics:
+          enabled: true
+
+        nodeExporter:
+          enabled: true
 
   destination:
     server: https://kubernetes.default.svc
@@ -24,6 +76,6 @@ spec:
     automated:
       prune: true
       selfHeal: true
-
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
