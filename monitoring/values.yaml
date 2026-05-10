@@ -15,13 +15,11 @@ grafana:
   defaultDashboardsEnabled: true
 
   additionalDataSources:
-  - name: Prometheus
-    type: prometheus
-    url: http://monitoring-kube-prometheus-prometheus:9090
-    access: proxy
-    isDefault: false
-
----
+    - name: Prometheus
+      type: prometheus
+      url: http://monitoring-kube-prometheus-prometheus:9090
+      access: proxy
+      isDefault: false
 
 prometheus:
   prometheusSpec:
@@ -29,12 +27,16 @@ prometheus:
       volumeClaimTemplate:
         spec:
           storageClassName: standard
-          accessModes: ["ReadWriteOnce"]
+          accessModes:
+            - ReadWriteOnce
           resources:
             requests:
               storage: 10Gi
+
     retention: 7d
+
     serviceMonitorSelectorNilUsesHelmValues: false
+
     resources:
       requests:
         memory: 400Mi
@@ -43,8 +45,6 @@ prometheus:
         memory: 800Mi
         cpu: 500m
 
----
-
 alertmanager:
   enabled: true
 
@@ -52,20 +52,18 @@ alertmanager:
     storage:
       volumeClaimTemplate:
         spec:
-          accessModes: ["ReadWriteOnce"]
+          storageClassName: standard
+          accessModes:
+            - ReadWriteOnce
           resources:
             requests:
               storage: 2Gi
-
----
 
 kube-state-metrics:
   enabled: true
 
 nodeExporter:
   enabled: true
-
----
 
 metricsServer:
   enabled: true
