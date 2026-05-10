@@ -9,8 +9,9 @@ spec:
   selector:
     app: web
   ports:
-    {{- range .Values.web.ports }}
-    - name: {{ .name }}
-      port: {{ .port }}
-      targetPort: {{ .port }}
-    {{- end }}
+    - name: http
+      port: 8080
+      targetPort: 8080
+    - name: exp-metrics
+      port: 9113
+      targetPort: 9113

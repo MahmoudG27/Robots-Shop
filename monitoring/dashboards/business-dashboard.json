@@ -1,0 +1,157 @@
+{
+  "uid": "robot-shop-business",
+  "title": "Robot Shop Business Dashboard",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Service Request Rate",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{service=~\"cart|catalogue|user\"}[5m])) by (service)",
+          "legendFormat": "{{service}}"
+        },
+        {
+          "expr": "sum(rate(payment_requests_total[5m]))",
+          "legendFormat": "payment"
+        },
+        {
+          "expr": "sum(rate(ratings_http_requests_total[5m]))",
+          "legendFormat": "ratings"
+        },
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{service=\"shipping\"}[5m]))",
+          "legendFormat": "shipping"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "HTTP 5xx Error Rate",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (service)",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Request Latency P95",
+      "gridPos": { "x": 0, "y": 6, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service))",
+          "legendFormat": "{{service}}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cart Items Added (/s)",
+      "gridPos": { "x": 12, "y": 6, "w": 6, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(cart_items_added_total[5m]))",
+          "legendFormat": "cart items added"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Payment Items Sold (/s)",
+      "gridPos": { "x": 18, "y": 6, "w": 6, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(payment_items_sold_total[5m]))",
+          "legendFormat": "payment items sold"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Dispatch Orders Processed / Errors",
+      "gridPos": { "x": 0, "y": 12, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(dispatch_orders_total[5m])",
+          "legendFormat": "processed"
+        },
+        {
+          "expr": "rate(dispatch_orders_errors_total[5m])",
+          "legendFormat": "errors"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Ratings API Calls /s",
+      "gridPos": { "x": 12, "y": 12, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(ratings_http_requests_total[5m])) by (route, status)",
+          "legendFormat": "{{route}} {{status}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Shipping Requests (/s)",
+      "gridPos": { "x": 0, "y": 18, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rate(http_server_requests_seconds_count{service=\"shipping\", uri!~\"/actuator.*\"}[5m])) by (uri)",
+          "legendFormat": "{{uri}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "NGINX Request Rate (/s)",
+      "gridPos": { "x": 12, "y": 18, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(nginx_http_requests_total[5m])",
+          "legendFormat": "nginx requests"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "NGINX Active Connections",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "nginx_connections_active",
+          "legendFormat": "active connections"
+        }
+      ]
+    }
+  ]
+}
