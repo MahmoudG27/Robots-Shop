@@ -19,6 +19,21 @@ const itemsAddedCounter = new promClient.Counter({
   registers: [register]
 });
 
+const httpRequestsTotal = new promClient.Counter({
+  name: 'http_requests_total',
+  help: 'Total HTTP requests',
+  labelNames: ['service', 'method', 'route', 'status'],
+  registers: [register]
+});
+
+const httpRequestDuration = new promClient.Histogram({
+  name: 'http_request_duration_seconds',
+  help: 'HTTP request duration',
+  labelNames: ['service', 'method', 'route', 'status'],
+  buckets: [0.1, 0.3, 0.5, 1, 2, 5],
+  registers: [register]
+});
+
 // ---------- Config ----------
 function validateEnv() {
   if (!process.env.REDIS_HOST) {
@@ -38,6 +53,27 @@ let redisConnected = false;
 
 // ---------- App ----------
 const app = express();
+
+// ---------- Metrics ----------
+app.use((req, res, next) => {
+  const end = httpRequestDuration.startTimer({
+    service: 'cart',
+    method: req.method,
+    route: req.path
+  });
+
+  res.on('finish', () => {
+    httpRequestsTotal.inc({
+      service: 'cart',
+      method: req.method,
+      route: req.path,
+      status: res.statusCode
+    });
+    end({ status: res.statusCode });
+  });
+
+  next();
+});
 
 // ---------- Security ----------
 

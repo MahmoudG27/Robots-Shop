@@ -14,7 +14,7 @@ class MetricsController
      */
     public function metrics(): Response
     {
-        $registry = MetricsRegistry::create();
+        $registry = MetricsRegistry::getRegistry();
 
         $renderer = new RenderTextFormat();
         $result = $renderer->render($registry->getMetricFamilySamples());

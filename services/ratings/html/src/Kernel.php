@@ -9,6 +9,7 @@ use MG\RobotShop\Ratings\Controller\RatingsApiController;
 use MG\RobotShop\Ratings\Service\CatalogueService;
 use MG\RobotShop\Ratings\Service\HealthCheckService;
 use MG\RobotShop\Ratings\Service\RatingsService;
+use MG\RobotShop\Ratings\Controller\MetricsController;
 use Monolog\Formatter\LineFormatter;
 use Symfony\Bundle\FrameworkBundle\FrameworkBundle;
 use Symfony\Bundle\FrameworkBundle\Kernel\MicroKernelTrait;
@@ -124,6 +125,10 @@ class Kernel extends BaseKernel implements EventSubscriberInterface
 
         $c->register(RatingsApiController::class)
             ->addMethodCall('setLogger', [new Reference('logger')])
+            ->addTag('controller.service_arguments')
+            ->setAutowired(true);
+        
+        $c->register(MetricsController::class)
             ->addTag('controller.service_arguments')
             ->setAutowired(true);
     }

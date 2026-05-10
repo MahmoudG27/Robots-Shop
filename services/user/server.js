@@ -20,38 +20,58 @@ const expLogger = expressPino({ logger });
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
 
+const httpRequestsTotal = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Total HTTP requests',
+  labelNames: ['service', 'method', 'route', 'status'],
+  registers: [register]
+});
+
 const httpRequestDuration = new client.Histogram({
-  name: 'user_http_request_duration_seconds',
+  name: 'http_request_duration_seconds',
   help: 'HTTP request duration',
-  labelNames: ['method', 'route', 'status'],
+  labelNames: ['service', 'method', 'route', 'status'],
   buckets: [0.1, 0.3, 0.5, 1, 2, 5],
   registers: [register]
 });
 
-/* =========================
-   App
-========================= */
+// ---------- App ----------
 const app = express();
 app.use(expLogger);
 
-/* Request + metrics timing */
-app.use((req, res, next) => {
-  res.set('Access-Control-Allow-Origin', '*');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
+// ---------- Security headers ----------
+app.use((req, res, next) => {
+  res.set('Timing-Allow-Origin', '*');
+  res.set('Access-Control-Allow-Origin', '*');
+  next();
+});
+
+// ---------- Metrics ----------
+app.use((req, res, next) => {
   const end = httpRequestDuration.startTimer({
+    service: 'user',
     method: req.method,
     route: req.path
   });
 
   res.on('finish', () => {
-    end({ status: res.statusCode });
+    httpRequestsTotal.inc({
+      service: 'user',
+      method: req.method,
+      route: req.path,
+      status: res.statusCode
+    });
+
+    end({
+      status: res.statusCode
+    });
   });
 
   next();
 });
-
-app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
 
 /* =========================
    Redis

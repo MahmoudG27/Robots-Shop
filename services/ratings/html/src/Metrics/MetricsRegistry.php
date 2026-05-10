@@ -7,16 +7,22 @@ use Prometheus\Storage\Redis;
 
 class MetricsRegistry
 {
-    public static function create(): CollectorRegistry
-    {
-        $adapter = new Redis([
-            'host' => getenv('REDIS_HOST') ?: 'redis',
-            'port' => getenv('REDIS_PORT') ?: 6379,
-            'timeout' => 0.1,
-            'read_timeout' => 10,
-            'persistent_connections' => false,
-        ]);
+    private static $registry;
 
-        return new CollectorRegistry($adapter);
+    public static function getRegistry(): CollectorRegistry
+    {
+        if (!self::$registry) {
+            $adapter = new Redis([
+                'host' => getenv('REDIS_HOST') ?: 'redis',
+                'port' => getenv('REDIS_PORT') ?: 6379,
+                'timeout' => 0.1,
+                'read_timeout' => 10,
+                'persistent_connections' => false,
+            ]);
+
+            self::$registry = new CollectorRegistry($adapter);
+        }
+
+        return self::$registry;
     }
 }

@@ -6,6 +6,7 @@ namespace MG\RobotShop\Ratings\Controller;
 
 use MG\RobotShop\Ratings\Service\CatalogueService;
 use MG\RobotShop\Ratings\Service\RatingsService;
+use MG\RobotShop\Ratings\Metrics\MetricsRegistry;
 use Psr\Log\LoggerAwareInterface;
 use Psr\Log\LoggerAwareTrait;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -43,6 +44,15 @@ class RatingsApiController implements LoggerAwareInterface
      */
     public function put(Request $request, string $sku, int $score): Response
     {
+        // --- Prometheus metrics setup ---
+        $registry = MetricsRegistry::getRegistry();
+        $counter = $registry->getOrRegisterCounter(
+            'ratings',
+            'http_requests_total',
+            'Total HTTP Requests',
+            ['method', 'route', 'status']
+        );
+
         $score = min(max(1, $score), 5);
 
         try {
@@ -50,24 +60,26 @@ class RatingsApiController implements LoggerAwareInterface
                 throw new NotFoundHttpException("$sku not found");
             }
         } catch (\Exception $e) {
+            $counter->inc(['PUT', '/api/rate', '500']);
             throw new HttpException(500, $e->getMessage(), $e);
         }
 
         try {
             $rating = $this->ratingsService->ratingBySku($sku);
             if ($rating['rating_count'] === 0) {
-                // not rated yet
                 $this->ratingsService->addRatingForSKU($sku, $score);
             } else {
-                // iffy maths
                 $newAvg = (($rating['avg_rating'] * $rating['rating_count']) + $score) / ($rating['rating_count'] + 1);
                 $this->ratingsService->updateRatingForSKU($sku, $newAvg, $rating['rating_count'] + 1);
             }
+
+            $counter->inc(['PUT', '/api/rate', '200']);
 
             return new JsonResponse([
                 'success' => true,
             ]);
         } catch (\Exception $e) {
+            $counter->inc(['PUT', '/api/rate', '500']);
             throw new HttpException(500, 'Unable to update rating', $e);
         }
     }
@@ -77,15 +89,27 @@ class RatingsApiController implements LoggerAwareInterface
      */
     public function get(Request $request, string $sku): Response
     {
+        // --- Prometheus metrics setup ---
+        $registry = MetricsRegistry::getRegistry();
+        $counter = $registry->getOrRegisterCounter(
+            'ratings',
+            'http_requests_total',
+            'Total HTTP Requests',
+            ['method', 'route', 'status']
+        );
+
         try {
             $data = $this->ratingsService->ratingBySku($sku);
             if ($data['rating_count'] === 0) {
                 throw new NotFoundHttpException("$sku not found");
             }
+
+            $counter->inc(['GET', '/api/fetch', '200']);
+
+            return new JsonResponse($data);
         } catch (\Exception $e) {
+            $counter->inc(['GET', '/api/fetch', '500']);
             throw new HttpException(500, $e->getMessage(), $e);
         }
-
-        return new JsonResponse($this->ratingsService->ratingBySku($sku));
     }
 }
