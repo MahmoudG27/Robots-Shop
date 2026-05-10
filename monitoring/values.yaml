@@ -1,5 +1,9 @@
 grafana:
-  adminPassword: "admin123"
+  adminUser: admin
+  adminPassword: admin123
+
+  forceDeployDatasources: true
+  forceDeployDashboards: true
 
   # service:
   #   type: NodePort
