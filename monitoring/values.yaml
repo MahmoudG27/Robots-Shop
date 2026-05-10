@@ -25,10 +25,16 @@ grafana:
 
 prometheus:
   prometheusSpec:
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: standard
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
     retention: 7d
-
     serviceMonitorSelectorNilUsesHelmValues: false
-
     resources:
       requests:
         memory: 400Mi
@@ -36,14 +42,6 @@ prometheus:
       limits:
         memory: 800Mi
         cpu: 500m
-
-    storageSpec:
-      volumeClaimTemplate:
-        spec:
-          accessModes: ["ReadWriteOnce"]
-          resources:
-            requests:
-              storage: 10Gi
 
 ---
 
