@@ -1,7 +1,10 @@
 grafana:
   adminUser: admin
   adminPassword: admin123
-  
+
+  forceDeployDatasources: true
+  forceDeployDashboards: true
+
   ingress:
     enabled: false
 
