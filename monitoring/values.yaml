@@ -1,14 +1,7 @@
 grafana:
   adminUser: admin
   adminPassword: admin123
-
-  forceDeployDatasources: true
-  forceDeployDashboards: true
-
-  # service:
-  #   type: NodePort
-  #   nodePort: 30007
-
+  
   ingress:
     enabled: false
 
@@ -16,7 +9,7 @@ grafana:
     enabled: true
     size: 5Gi
 
-  defaultDashboardsEnabled: true
+  defaultDashboardsEnabled: false
 
   additionalDataSources:
   - name: Prometheus
