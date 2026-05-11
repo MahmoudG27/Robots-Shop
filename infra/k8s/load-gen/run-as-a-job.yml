@@ -14,7 +14,7 @@ spec:
             - name: HOST
               value: "http://web:8080"
             - name: NUM_CLIENTS
-              value: "20"
+              value: "50"
             - name: RUN_TIME
               value: "30m"
             - name: RAMP_RATE

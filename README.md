@@ -1,259 +1,963 @@
-# Stan's Robot Shop - Microservices on Azure AKS
+# 🤖 Robots Shop - Microservices Architecture Demo
 
-A sample microservices e-commerce application deployed on Azure Kubernetes Service (AKS) with Prometheus monitoring. This project demonstrates containerized application orchestration, microservices architecture, and cloud-native monitoring techniques.
+> A comprehensive microservices e-commerce platform showcasing modern cloud-native architecture with **3 deployment strategies**: Docker Compose, Kubernetes, and Helm with ArgoCD GitOps.
 
-## 📋 Overview
+![Deployment Methods](https://img.shields.io/badge/Deployments-3-blue) ![Services](https://img.shields.io/badge/Services-8-green) ![Languages](https://img.shields.io/badge/Languages-5-orange) ![Databases](https://img.shields.io/badge/Databases-4-red)
 
-Stan's Robot Shop is a complete microservices platform showcasing modern cloud-native development practices. Each service is independently deployable and uses its own technology stack. The application is instrumented with Prometheus for comprehensive observability.
+---
 
-**Note**: This is a sandbox application for learning. Error handling is basic and security features are minimal - not intended for production use.
+## 📋 Table of Contents
+
+- [Overview](#-overview)
+- [Architecture](#-architecture)
+- [Technology Stack](#-technology-stack)
+- [Project Structure](#-project-structure)
+- [Prerequisites](#-prerequisites)
+- [Deployment Methods](#-deployment-methods)
+  - [Docker Compose](#1-docker-compose)
+  - [Kubernetes Manifests](#2-kubernetes-manifests)
+  - [Helm Charts](#3-helm-charts)
+  - [ArgoCD GitOps](#4-argocd-gitops)
+- [Monitoring & Observability](#-monitoring--observability)
+- [Load Generation](#-load-generation)
+- [Configuration Reference](#-configuration-reference)
+- [Development](#-development)
+- [Troubleshooting](#-troubleshooting)
+
+---
+
+## 🎯 Overview
+
+**Robots Shop** is an educational microservices e-commerce platform designed to demonstrate:
+
+✅ **Modern Architecture Patterns**
+- Microservices decomposition
+- Service-to-service communication
+- Asynchronous messaging patterns
+- Data consistency strategies
+
+✅ **Cloud-Native Technologies**
+- Containerization (Docker)
+- Container orchestration (Kubernetes)
+- Infrastructure as Code (Helm)
+- GitOps (ArgoCD)
+
+✅ **Production-Grade Features**
+- Health checks & auto-healing
+- Horizontal Pod Autoscaling (HPA)
+- Distributed monitoring (Prometheus)
+- Alert management
+
+✅ **Multi-Language Stack**
+- Node.js (Frontend & Backend)
+- Python (Payment Processing)
+- Java (Shipping Service)
+- Go (Dispatch Service)
+- PHP (Ratings)
+
+**⚠️ Note**: This is a **demo/educational project**. Security hardening and production-level error handling are minimal.
+
+---
 
 ## 🏗️ Architecture
 
-### Microservices
+### System Components Diagram
 
-| Service | Technology | Port | Purpose |
-|---------|-----------|------|---------|
-| **Web** | Nginx + AngularJS 1.x | 8080 | Frontend UI & Reverse Proxy |
-| **Catalogue** | Node.js + Express + MongoDB | 8080 | Product catalog management |
-| **Cart** | Node.js + Express + Redis | 8080 | Shopping cart operations |
-| **User** | Node.js + Express + MongoDB + Redis | 8080 | User authentication & profiles |
-| **Shipping** | Java + Spring Boot + MySQL | 8080 | Shipping calculation & management |
-| **Ratings** | PHP + Apache + MySQL | 80 | Product ratings & reviews |
-| **Payment** | Python + Flask + RabbitMQ | 8080 | Payment processing |
-| **Dispatch** | Go + RabbitMQ | 8080 | Order dispatch & fulfillment |
+```
+┌────────────────────────────────────────────────────────────────┐
+│                          Load Balancer                         │
+└────────────────────────┬─────────────────────────────────────┘
+                         │
+        ┌────────────────┼────────────────┐
+        │                │                │
+     ┌──▼──┐         ┌───▼───┐       ┌───▼────┐
+     │ Web │         │Catalog│       │ Cart   │
+     │(Nginx)        │(Node) │       │(Node)  │
+     └─────┘         └───┬───┘       └────┬───┘
+                         │                 │
+        ┌────────────────┼─────┬──────────┘
+        │                │     │
+     ┌──▼──┐         ┌───▼─┐ ┌▼────┐
+     │User │         │Pay  │ │Ratings
+     │(Node)         │(Py) │ │(PHP)
+     └─┬──┬┘         └──┬──┘ └──┬──┘
+       │  │             │       │
+   ┌───▼──▼─────────────┼───┬───▼──┐
+   │  Data Layer        │   │      │
+   │                    │   │      │
+   │ MongoDB  MySQL     │   │      │
+   │ Redis   RabbitMQ   │   │      │
+   └────────────────────┘   │      │
+                            │      │
+                         ┌──▼───┐ │
+                         │Dispatch
+                         │(Go)   │
+                         └───────┘
+```
+
+### Microservices Overview
+
+| Service | Framework | Database | Port | Replicas | Purpose |
+|---------|-----------|----------|------|----------|---------|
+| **Web** | Nginx | - | 8080 | 1 | Frontend & Reverse Proxy |
+| **Catalogue** | Node.js | MongoDB | 8080 | 1-3* | Product Management |
+| **Cart** | Node.js | Redis | 8080 | 2-3* | Shopping Cart |
+| **User** | Node.js | MongoDB+Redis | 8080 | 1-3* | User Accounts |
+| **Shipping** | Java (Spring) | MySQL | 8080 | 1 | Logistics |
+| **Ratings** | PHP | MySQL+Redis | 80 | 1-3* | Reviews & Ratings |
+| **Payment** | Python (Flask) | RabbitMQ | 8080 | 1 | Payment Processing |
+| **Dispatch** | Go | RabbitMQ | 8080 | 1 | Order Fulfillment |
+
+*\*Auto-scaling enabled in Kubernetes deployment (HPA)*
 
 ### Data Services
 
-- **MongoDB** - Document store for catalogue and user data
-- **MySQL** - Relational database for ratings and shipping data
-- **Redis** - In-memory cache for cart and sessions
-- **RabbitMQ** - Message broker for asynchronous operations
+| Service | Type | Port | Purpose |
+|---------|------|------|---------|
+| **MongoDB** | Document DB | 27017 | Catalogue & User data |
+| **MySQL** | Relational DB | 3306 | Ratings & Shipping data |
+| **Redis** | Cache/Session | 6379 | Cart & Session storage |
+| **RabbitMQ** | Message Broker | 5672 | Async messaging |
 
-### Monitoring
+---
 
-- **Prometheus** - Metrics collection and time-series database
-- **Service Metrics** - `/metrics` endpoint on Node.js and Python services
+## 🛠️ Technology Stack
 
-## 📦 Directory Structure
+### Backend Services
+- **Node.js** + Express.js
+- **Python** 3.8+ with Flask
+- **Java** 11+ with Spring Boot
+- **Go** 1.16+
+- **PHP** 7.4+
+
+### Frontend
+- **Nginx** web server
+- **AngularJS** 1.x
+- HTML5 / CSS3
+
+### Databases & Messaging
+- **MongoDB** 5.0+ (NoSQL)
+- **MySQL** 8.0+ (RDBMS)
+- **Redis** 6.0+ (Cache)
+- **RabbitMQ** 3.8+ (Message Broker)
+
+### Container & Orchestration
+- **Docker** (Multi-stage builds)
+- **Kubernetes** 1.20+
+- **Helm** 3.0+
+- **ArgoCD** (GitOps)
+
+### Monitoring & Observability
+- **Prometheus** (Metrics)
+- **Grafana** (Dashboards)
+- **PrometheusRules** (Alerts)
+- **ServiceMonitor** (Auto-discovery)
+
+---
+
+## 📁 Project Structure
 
 ```
-Robots Microservices/
-├── catalogue/                  # Product catalogue service (Node.js)
-├── cart/                       # Shopping cart service (Node.js)
-├── user/                       # User service (Node.js)
-├── shipping/                   # Shipping service (Java Spring Boot)
-├── ratings/                    # Ratings service (PHP)
-├── payment/                    # Payment service (Python Flask)
-├── dispatch/                   # Order dispatch service (Go)
-├── web/                        # Frontend UI (Nginx + AngularJS)
-├── load-gen/                   # Load testing tools (Python Locust)
-├── mysql/                      # MySQL database initialization
-├── Manifests/                  # Kubernetes deployment manifests
-│   ├── cart/
-│   ├── catalogue/
-│   ├── dispatch/
-│   ├── mongo/
-│   ├── mysql/
-│   ├── payment/
-│   ├── rabbitMQ/
-│   ├── ratings/
-│   ├── redis/
-│   ├── shipping/
-│   ├── user/
-│   └── web/
-├── docker-compose.yaml         # Local development setup
-└── README.md                   # This file
+Robots-Shop/
+│
+├── 📄 README.md                          # This file
+├── 📄 CONFIGURATION_REFERENCE.md         # All environment variables
+├── 📄 PROJECT_SUMMARY.md                 # Quick reference
+├── 📄 DEPENDENCY_MAP.md                  # Service dependencies
+│
+├── 🐳 services/                          # Microservices code
+│   ├── web/                              # Frontend (Nginx)
+│   ├── catalogue/                        # Product service (Node.js)
+│   ├── cart/                             # Cart service (Node.js)
+│   ├── user/                             # User service (Node.js)
+│   ├── shipping/                         # Shipping (Java)
+│   ├── ratings/                          # Ratings (PHP)
+│   ├── payment/                          # Payment (Python)
+│   └── dispatch/                         # Dispatch (Go)
+│
+├── 📦 infra/                             # Infrastructure as Code
+│   ├── docker-compose/
+│   │   ├── docker-compose.yaml           # All services
+│   │   ├── docker-compose-loadgen.yaml   # Load generation
+│   │   └── .env                          # Environment variables
+│   ├── k8s/                              # Raw Kubernetes manifests
+│   │   ├── cart/deployment.yaml
+│   │   ├── catalogue/
+│   │   └── ... (all services)
+│   ├── helm/                             # Helm Chart
+│   │   ├── Chart.yaml
+│   │   ├── values.yaml
+│   │   └── templates/                    # K8s templates
+│   │       ├── apps-deployment.yaml
+│   │       ├── apps-hpa.yaml
+│   │       ├── apps-service.yaml
+│   │       ├── apps-servicemonitor.yaml
+│   │       ├── mongodb-*
+│   │       ├── mysql-*
+│   │       ├── rabbitmq-*
+│   │       └── ingress.yaml
+│   └── db-init/                          # Database initialization
+│       ├── mongo/init.js
+│       └── mysql/init.sql
+│
+├── 🔍 monitoring/                        # Observability
+│   ├── values.yaml                       # Prometheus stack config
+│   ├── alerts/                           # Alert rules
+│   │   ├── mongo-alerts.yaml
+│   │   ├── mysql-alerts.yaml
+│   │   ├── rabbitmq-alerts.yaml
+│   │   └── redis-alerts.yaml
+│   └── dashboards/                       # Grafana dashboards
+│       ├── business-dashboard.json
+│       └── mysql.json
+│
+├── 📊 load-gen/                          # Load testing
+│   ├── robot-shop.py                     # Locust test scenarios
+│   ├── load-gen.sh
+│   ├── Dockerfile
+│   └── requirements.txt
+│
+├── 🔄 argocd/                            # GitOps automation
+│   ├── robots-app.yaml                   # Main app deployment
+│   └── monitoring-app.yaml               # Monitoring stack
+│
+└── 🐙 .github/                           # GitHub workflows
+    └── workflows/
 ```
 
-## 🚀 Quick Start
+---
 
-### Prerequisites
+## 📋 Prerequisites
 
-- **Azure Account** with AKS cluster (or local K8s with minikube)
-- **kubectl** - Kubernetes command-line tool
-- **Helm** - Kubernetes package manager (optional, for advanced deployments)
-- **Docker** - For local building and testing
-- **Azure CLI** - For managing Azure resources
+### System Requirements
 
+| Component | Minimum | Recommended |
+|-----------|---------|-------------|
+| **CPU** | 2 cores | 4+ cores |
+| **RAM** | 4 GB | 8+ GB |
+| **Disk** | 10 GB | 20+ GB |
+| **Network** | Standard | Gigabit |
 
-### Deploy to Azure AKS
+### Required Tools
 
-#### 1. Prepare Azure Resources
+- **Docker** 20.10+ ([Install](https://docs.docker.com/install/))
+- **Docker Compose** 2.0+ ([Install](https://docs.docker.com/compose/install/))
+- **kubectl** 1.20+ ([Install](https://kubernetes.io/docs/tasks/tools/))
+- **Helm** 3.0+ ([Install](https://helm.sh/docs/intro/install/))
+- **Git** 2.0+ ([Install](https://git-scm.com/))
+
+### Optional Tools
+
+- **Minikube** or **kind** (Local Kubernetes)
+- **Azure CLI** (Azure AKS)
+- **Lens** (Kubernetes IDE)
+
+### Environment Setup
 
 ```bash
-# Set variables
-RESOURCE_GROUP="robot-shop-rg"
-CLUSTER_NAME="robot-shop-aks"
-REGISTRY_NAME="robotshopacr"
-LOCATION="eastus"
+# Clone the repository
+git clone https://github.com/MahmoudG27/Robots-Shop.git
+cd Robots-Shop
 
-# Create resource group
-az group create --name $RESOURCE_GROUP --location $LOCATION
+# Set permissions
+chmod +x load-gen/*.sh
 
-# Create Azure Container Registry
-az acr create --resource-group $RESOURCE_GROUP \
-  --name $REGISTRY_NAME --sku Basic
+# Verify Docker installation
+docker --version
+docker-compose --version
 
-# Create AKS Cluster
-az aks create --resource-group $RESOURCE_GROUP \
-  --name $CLUSTER_NAME \
-  --node-count 3 \
-  --vm-set-type VirtualMachineScaleSets \
-  --load-balancer-sku standard \
-  --enable-managed-identity \
-  --network-plugin azure \
-  --network-policy azure
+# Verify Kubernetes tools
+kubectl version --client
+helm version
 ```
 
-#### 2. Configure kubectl Access
+---
+
+## 🚀 Deployment Methods
+
+The project supports **4 different deployment strategies**:
+
+### 1. Docker Compose
+
+Best for: **Local Development**, Quick Testing, Learning
+
+#### Quick Start
 
 ```bash
-# Get AKS credentials
-az aks get-credentials --resource-group $RESOURCE_GROUP \
-  --name $CLUSTER_NAME --overwrite-existing
+# Navigate to infrastructure
+cd infra/docker-compose
 
-# Verify connection
+# Start all services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f web
+
+# Stop services
+docker-compose down
+```
+
+#### Service URLs
+
+| Service | URL | Purpose |
+|---------|-----|---------|
+| Web UI | `http://localhost:8080` | Application frontend |
+| Catalogue API | `http://localhost:8080/catalogue` | Product API |
+| Cart API | `http://localhost:8080/cart` | Cart operations |
+| Metrics (Cart) | `http://localhost:8080/metrics` | Prometheus metrics |
+
+#### Configuration
+
+Customize deployment via `docker-compose/.env`:
+
+```bash
+# Image registry
+IMAGE_REGISTRY=containerregistryrobots.azurecr.io
+IMAGE_TAG=v1.0.0
+
+# Database credentials
+MONGO_USER=admin
+MONGO_PASS=admin123
+MYSQL_ROOT_PASS=rootpass
+MYSQL_USER=shipping
+MYSQL_PASS=shipping123
+```
+
+#### Enable Load Generation
+
+```bash
+# Start separate load generation container
+docker-compose -f docker-compose.yaml -f docker-compose-loadgen.yaml up -d
+
+# Configure load via environment
+docker-compose logs loadgen
+```
+
+---
+
+### 2. Kubernetes Manifests
+
+Best for: **Manual Control**, Understanding K8s, Production Debugging
+
+#### Prerequisites
+
+```bash
+# Have a Kubernetes cluster running
+# Local: minikube, kind, Docker Desktop
+# Cloud: AKS, EKS, GKE
+
+# Verify cluster access
 kubectl cluster-info
 kubectl get nodes
 ```
 
-#### 3. Build and Push Images to Registry
-
-```bash
-# Login to ACR
-az acr login --name $REGISTRY_NAME
-
-# Build images
-docker-compose build
-
-# Tag and push images
-docker tag robotshop/rs-web:latest $REGISTRY_NAME.azurecr.io/robotshop/rs-web:latest
-docker push $REGISTRY_NAME.azurecr.io/robotshop/rs-web:latest
-
-# Repeat for all services...
-```
-
-#### 4. Deploy to AKS
+#### Deployment
 
 ```bash
 # Create namespace
 kubectl create namespace robot-shop
 
-# Update image references in Manifests (if using ACR)
-# Change image registry from Docker Hub to your ACR
+# Deploy databases (required first)
+kubectl apply -f infra/k8s/mongo/ -n robot-shop
+kubectl apply -f infra/k8s/mysql/ -n robot-shop
+kubectl apply -f infra/k8s/redis/ -n robot-shop
+kubectl apply -f infra/k8s/rabbitMQ/ -n robot-shop
 
-# Deploy services
-kubectl apply -f Manifests/ -n robot-shop
+# Wait for databases to be ready
+kubectl wait --for=condition=ready pod -l app=mongo -n robot-shop --timeout=300s
 
-# Verify deployments
-kubectl get deployments -n robot-shop
+# Deploy applications
+kubectl apply -f infra/k8s/ -n robot-shop
+
+# Verify deployment
 kubectl get pods -n robot-shop
 kubectl get svc -n robot-shop
 ```
 
-#### 5. Access the Application
+#### Access Application
 
 ```bash
-# Get external IP of web service
-kubectl get svc web -n robot-shop
+# Port forward to web service
+kubectl port-forward svc/web 8080:8080 -n robot-shop
 
-# Access application
-# http://<EXTERNAL-IP>:8080
+# Access via browser
+# http://localhost:8080
 ```
 
-## 📊 Monitoring with Prometheus
+#### Scaling & Monitoring
 
-### Service Metrics Endpoints
+```bash
+# Scale a service
+kubectl scale deployment catalogue --replicas=3 -n robot-shop
+
+# View pod logs
+kubectl logs -f deployment/cart -n robot-shop
+
+# Monitor resource usage
+kubectl top pods -n robot-shop
+```
+
+#### Cleanup
+
+```bash
+kubectl delete namespace robot-shop
+```
+
+---
+
+### 3. Helm Charts
+
+Best for: **Production Deployments**, Customization, Version Management
+
+#### Installation
+
+```bash
+# Add Helm chart repository (if applicable)
+helm repo add robotshop https://charts.example.com
+
+# Create namespace
+kubectl create namespace robot-shop
+
+# Deploy using Helm
+helm install robot-shop ./infra/helm \
+  --namespace robot-shop \
+  --values infra/helm/values.yaml
+
+# Verify installation
+helm list -n robot-shop
+kubectl get all -n robot-shop
+```
+
+#### Customization
+
+Override default values:
+
+```bash
+# Update specific values
+helm upgrade robot-shop ./infra/helm \
+  --namespace robot-shop \
+  --set services.replicas=3 \
+  --set services.resources.limits.cpu=500m
+```
+
+Create custom `values-prod.yaml`:
+
+```yaml
+# values-prod.yaml
+global:
+  namespace: robot-shop
+  imageTag: "v1.0.0"
+
+services:
+  defaults:
+    replicas: 3
+    resources:
+      requests:
+        cpu: 250m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 512Mi
+
+  cart:
+    replicas: 3
+    hpa:
+      enabled: true
+      maxReplicas: 10
+
+  catalogue:
+    hpa:
+      enabled: true
+```
+
+Deploy with custom values:
+
+```bash
+helm upgrade robot-shop ./infra/helm \
+  --namespace robot-shop \
+  -f infra/helm/values.yaml \
+  -f values-prod.yaml
+```
+
+#### Useful Helm Commands
+
+```bash
+# Check what would be deployed
+helm template robot-shop ./infra/helm -n robot-shop
+
+# Get deployment values
+helm get values robot-shop -n robot-shop
+
+# Rollback to previous version
+helm rollback robot-shop -n robot-shop
+
+# Uninstall
+helm uninstall robot-shop -n robot-shop
+```
+
+---
+
+### 4. ArgoCD (GitOps)
+
+Best for: **Automated Deployments**, Multi-Environment, CD/CI Pipeline
+
+#### Prerequisites
+
+```bash
+# Install ArgoCD
+kubectl create namespace argocd
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Wait for ArgoCD to be ready
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=300s
+
+# Get initial admin password
+kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d
+```
+
+#### Access ArgoCD UI
+
+```bash
+# Port forward to ArgoCD server
+kubectl port-forward svc/argocd-server -n argocd 8443:443
+
+# Access UI: https://localhost:8443
+# Username: admin
+# Password: (from secret above)
+```
+
+#### Deploy Application
+
+```bash
+# Apply ArgoCD application manifests
+kubectl apply -f argocd/robots-app.yaml -n argocd
+
+# Monitor sync status
+argocd app get robot-shop
+
+# Check in UI or via CLI
+argocd app list
+```
+
+#### Application Configuration
+
+File: `argocd/robots-app.yaml`
+
+```yaml
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: robot-shop
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/MahmoudG27/Robots-Shop.git
+    targetRevision: master
+    path: infra/helm
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: default
+
+  syncPolicy:
+    automated:
+      prune: true        # Delete resources not in Git
+      selfHeal: true     # Auto-sync when cluster drifts
+```
+
+#### Git Workflow
+
+```bash
+# Make changes locally
+vim infra/helm/values.yaml
+
+# Commit and push
+git add .
+git commit -m "Update replica count"
+git push origin master
+
+# ArgoCD auto-syncs (if automated: true)
+# Or manually sync:
+argocd app sync robot-shop
+```
+
+#### Monitoring Deployments
+
+```bash
+# View deployment history
+argocd app history robot-shop
+
+# Compare with Git
+argocd app diff robot-shop
+
+# Get detailed app status
+argocd app get robot-shop --refresh
+```
+
+---
+
+## 📊 Monitoring & Observability
+
+### Prometheus Metrics
+
+The application exports metrics on multiple endpoints:
+
+#### Service Metrics
 
 | Service | Endpoint | Metrics |
 |---------|----------|---------|
-| Cart | `http://cart:8080/metrics` | Items added counter |
-| Payment | `http://payment:8080/metrics` | Purchase counter, cart histograms |
+| **Cart** | `/metrics` | `cart_item_*`, latency histograms |
+| **Payment** | `/metrics` | `payment_*`, success/failure counters |
+| **Catalogue** | `/metrics` | `catalogue_*`, response times |
+
+#### Database Metrics
+
+| Database | Exporter | Interval | Metrics |
+|----------|----------|----------|---------|
+| MongoDB | Prometheus Exporter | 15s | Operations, connections, memory |
+| MySQL | Prometheus Exporter | 15s | Queries, connections, replication |
+| Redis | Redis Exporter | 15s | Commands, memory, evictions |
+| RabbitMQ | RabbitMQ Exporter | 15s | Messages, connections, queues |
+
+### Grafana Dashboards
+
+#### Available Dashboards
+
+1. **Business Dashboard** (`business-dashboard.json`)
+   - Orders per minute
+   - Revenue trends
+   - User activity
+   - Error rates
+
+2. **MySQL Dashboard** (`mysql.json`)
+   - Query performance
+   - Replication status
+   - Connection pool
+
+#### Access Grafana
+
+```bash
+# Default credentials
+# Username: admin
+# Password: (set during deployment)
+
+# Port forward
+kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
+
+# Access: http://localhost:3000
 ```
 
-### Load Gen Environment Variables
+### Alert Rules
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `TARGET_HOST` | Application URL | `http://web:8080` |
-| `NUM_CLIENTS` | Concurrent clients | `10` |
-| `SPAWN_RATE` | Client spawn rate | `2` |
-| `RUN_TIME` | Duration to run (seconds) | `3600` |
-| `ERROR_RATE` | Inject error percentage | `5` |
+Configured in `monitoring/alerts/`:
 
+#### MongoDB Alerts
+- Slow queries detected
+- Connection pool exhausted
+- Replication lag
 
-## 📚 Learning Resources
+#### MySQL Alerts
+- Slave replication down
+- Slow queries
+- Connection limit reached
 
-- [Azure AKS Documentation](https://docs.microsoft.com/en-us/azure/aks/)
-- [Kubernetes Official Documentation](https://kubernetes.io/docs/)
-- [Prometheus Operator Documentation](https://prometheus-operator.dev/)
-- [Docker Best Practices](https://docs.docker.com/develop/dev-best-practices/)
-- [Spring Boot Documentation](https://spring.io/projects/spring-boot)
+#### RabbitMQ Alerts
+- Queue depth critical
+- Channel closed
+- Memory usage high
+
+#### Redis Alerts
+- Memory fragmentation high
+- Evictions detected
+- Connection refused
+
+### Query Prometheus Metrics
+
+```bash
+# Port forward Prometheus
+kubectl port-forward svc/prometheus-operated 9090:9090 -n monitoring
+
+# Query examples
+# http://localhost:9090/graph
+
+# Instant queries
+up{job="kubernetes-apiservers"}
+
+# Range queries
+rate(http_requests_total[5m])
+
+# Aggregation
+sum(rate(cart_items_total[1m]))
+```
+
+---
+
+## ⚡ Load Generation
+
+Generate realistic traffic to test the system:
+
+### Quick Start
+
+```bash
+cd load-gen
+
+# Build the image
+./build.sh
+
+# Run load generation (default: 1 client)
+./load-gen.sh
+
+# Configure load
+./load-gen.sh \
+  -h http://localhost:8080 \
+  -n 10 \
+  -t 30m \
+  -r 2
+```
+
+### Environment Variables
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `TARGET_HOST` | http://web:8080 | Application URL |
+| `NUM_CLIENTS` | 1 | Concurrent users |
+| `SPAWN_RATE` | 1 | Users spawned/second |
+| `RUN_TIME` | 1h | Duration to run |
+| `ERROR` | 0 | Inject errors (1=yes) |
+| `SILENT` | 0 | Suppress verbose output |
+
+### Kubernetes Deployment
+
+```bash
+# Deploy load generator pod
+kubectl apply -f infra/k8s/load-gen/deployment.yaml -n robot-shop
+
+# Monitor load generation
+kubectl logs -f deployment/load-gen -n robot-shop
+
+# Adjust scaling during load
+# Varies load over time for realistic testing
+./load-gen.sh -h http://web:8080 -n 10 -t 1h30m
+```
+
+### Performance Monitoring During Load
+
+```bash
+# Monitor in parallel terminal
+watch kubectl top pods -n robot-shop
+
+# Check auto-scaling
+kubectl get hpa -n robot-shop -w
+
+# View metrics in Prometheus
+# http://localhost:9090/graph
+# Query: rate(http_requests_total[1m])
+```
+
+---
+
+## ⚙️ Configuration Reference
+
+For detailed configuration of all services, see [CONFIGURATION_REFERENCE.md](CONFIGURATION_REFERENCE.md).
+
+### Quick Reference
+
+#### Database Credentials
+
+```
+MongoDB:  admin / admin123
+MySQL:    shipping / shipping123
+          ratings / ratings123
+RabbitMQ: guest / guest (docker-compose)
+          robotshop / S3cureP@ss! (Kubernetes)
+```
+
+#### Service Ports
+
+```
+Web:         8080
+Catalogue:   8080
+Cart:        8080
+User:        8080
+Shipping:    8080
+Ratings:     80
+Payment:     8080
+Dispatch:    8080
+Prometheus:  9090
+Grafana:     3000
+```
+
+#### Resource Limits (Kubernetes)
+
+```yaml
+Requests:
+  CPU:     100m
+  Memory:  128Mi
+
+Limits:
+  CPU:     300m
+  Memory:  256Mi
+
+(Shipping service: higher limits due to Java/Spring)
+```
+
+---
+
+## 👨‍💻 Development
+
+### Local Development Setup
+
+```bash
+# Install Node.js dependencies (for Node services)
+cd services/catalogue
+npm install
+
+# Install Python dependencies
+cd services/payment
+pip install -r requirements.txt
+
+# Build individual services
+docker build -t robots/catalogue:dev services/catalogue/
+```
+
+### Adding New Services
+
+1. Create service directory: `services/myservice/`
+2. Add Dockerfile with multi-stage build
+3. Create K8s deployment manifest: `infra/k8s/myservice/`
+4. Update Helm templates: `infra/helm/templates/`
+5. Add to docker-compose.yaml
+6. Update monitoring service monitor
+
+### Testing Locally
+
+```bash
+# Run docker-compose
+docker-compose -f infra/docker-compose/docker-compose.yaml up
+
+# Test endpoints
+curl http://localhost:8080/
+
+# Test individual services
+curl http://localhost:8080/catalogue/api/catalogue
+
+# Load test
+cd load-gen && ./load-gen.sh
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Docker Compose Issues
+
+```bash
+# Containers won't start
+docker-compose logs <service>
+
+# Port already in use
+lsof -i :8080
+docker-compose down  # Clean shutdown
+
+# Rebuild images
+docker-compose build --no-cache
+```
+
+### Kubernetes Issues
+
+```bash
+# Pods not starting
+kubectl describe pod <pod-name> -n robot-shop
+
+# Check resource constraints
+kubectl top nodes
+kubectl top pods -n robot-shop
+
+# View recent events
+kubectl get events -n robot-shop --sort-by='.lastTimestamp'
+
+# Debug pod
+kubectl exec -it <pod-name> -n robot-shop -- /bin/sh
+kubectl port-forward pod/<pod-name> 8080:8080 -n robot-shop
+```
+
+### Common Issues
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| Connection refused | Service not ready | `kubectl wait --for=condition=ready pod` |
+| ImagePullBackOff | Registry auth | `kubectl create secret docker-registry` |
+| OOMKilled | Memory limit | Increase `limits.memory` in values |
+| High latency | Resource contention | Enable HPA or scale replicas |
+
+### Performance Tuning
+
+```bash
+# Enable horizontal pod autoscaling
+kubectl apply -f infra/k8s/hpa/
+
+# Check HPA status
+kubectl get hpa -n robot-shop -w
+
+# Monitor resource usage
+watch 'kubectl top pods -n robot-shop; echo "---"; kubectl top nodes'
+```
+
+---
+
+## 📚 Additional Resources
+
+### Documentation
+
+- [CONFIGURATION_REFERENCE.md](CONFIGURATION_REFERENCE.md) - All environment variables
+- [PROJECT_SUMMARY.md](PROJECT_SUMMARY.md) - Quick reference guide
+- [DEPENDENCY_MAP.md](DEPENDENCY_MAP.md) - Service interdependencies
+
+### External Links
+
+- [Docker Documentation](https://docs.docker.com/)
+- [Kubernetes Docs](https://kubernetes.io/docs/)
+- [Helm Documentation](https://helm.sh/docs/)
+- [ArgoCD Docs](https://argo-cd.readthedocs.io/)
+- [Prometheus Docs](https://prometheus.io/docs/)
 - [Express.js Guide](http://expressjs.com/)
+- [Spring Boot Docs](https://spring.io/projects/spring-boot)
 - [Flask Documentation](https://flask.palletsprojects.com/)
+- [Go Documentation](https://golang.org/doc/)
 
-```
+### Learning Path
 
-## 📊 Architecture Diagram
+1. **Beginners**: Start with Docker Compose
+2. **Intermediate**: Learn Kubernetes basics with raw manifests
+3. **Advanced**: Use Helm for templating and ArgoCD for GitOps
+4. **Expert**: Customize monitoring, add services, implement advanced patterns
 
-```
-┌─────────────────────────────────────────────────┐
-│                    Azure AKS                    │
-├─────────────────────────────────────────────────┤
-│                                                 │
-│  ┌──────────────────────────────────────────┐   │
-│  │            Ingress / Load Balancer       │   │
-│  └────────────────────┬─────────────────────┘   │
-│                       │                         │
-│  ┌────────────┬───────▼────────┬──────────┐     │
-│  │   Web      │   Catalogue    │  Cart    │     │
-│  │ (Nginx)    │   (Node.js)    │(Node.js) │     │
-│  └────────┬───┴────────────────┴──────────┘     │
-│           │                                     │
-│  ┌────────▼─────┬──────────┬──────────────┐     │
-│  │    User      │  Payment │  Dispatch    │     │
-│  │  (Node.js)   │ (Python) │    (Go)      │     │
-│  └──────────────┴──────────┴──────────────┘     │
-│                                                 │
-│  ┌──────────────────────────────────────────┐   │
-│  │       Data Services & Messaging          │   │
-│  │  MongoDB  │  MySQL  │  Redis │ RabbitMQ  │   │
-│  └──────────────────────────────────────────┘   │
-│                                                 │
-│  ┌──────────────────────────────────────────┐   │
-│  │        Prometheus Monitoring             │   │
-│  │      (Metrics Scraping & Storage)        │   │
-│  └──────────────────────────────────────────┘   │
-│                                                 │
-└─────────────────────────────────────────────────┘
-```
+---
+
+## 📝 License
+
+This is an educational project. Modify and use as needed for learning.
+
+---
 
 ## 👤 Author
 
 **Mahmoud Gamal**
 
+Contributions and feedback are welcome!
+
 ---
 
-For issues, feature requests, or contributions, please refer to the repository
+## 🎉 Quick Links
 
-kind load docker-image containerregistryrobots.azurecr.io/web:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/user:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/shipping:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/cart:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/catalogue:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/dispatch:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/payment:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/ratings:v1.0.0
-kind load docker-image containerregistryrobots.azurecr.io/load-gen:v1.0.0
-
-
-docker build -t containerregistryrobots.azurecr.io/web:v1.0.0 ./web -f web/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/user:v1.0.0 ./user -f user/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/shipping:v1.0.0 ./shipping -f shipping/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/cart:v1.0.0 ./cart -f cart/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/catalogue:v1.0.0 ./catalogue -f catalogue/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/dispatch:v1.0.0 ./dispatch -f dispatch/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/payment:v1.0.0 ./payment -f payment/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/ratings:v1.0.0 ./ratings -f ratings/Dockerfile
-docker build -t containerregistryrobots.azurecr.io/load-gen:v1.0.0 ./load-gen -f load-gen/Dockerfile
+- 🐳 [Docker Compose Quick Start](#1-docker-compose)
+- ☸️ [Kubernetes Quick Start](#2-kubernetes-manifests)
+- 📦 [Helm Quick Start](#3-helm-charts)
+- 🔄 [ArgoCD Quick Start](#4-argocd-gitops)
+- 📊 [Monitoring Setup](#-monitoring--observability)

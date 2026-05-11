@@ -1,8 +1,10 @@
 name: CI - GitOps Robot Shop
 
 on:
-  push:
-    branches: [ main ]
+  # push:
+  #   branches: [ master ]
+  workflow_dispatch:
+  
 
 env:
   REGISTRY: containerregistryrobots.azurecr.io
