@@ -1,8 +1,8 @@
 # 🤖 Robots Shop - Microservices Architecture Demo
 
-> A comprehensive microservices e-commerce platform showcasing modern cloud-native architecture with **3 deployment strategies**: Docker Compose, Kubernetes, and Helm with ArgoCD GitOps.
+> A comprehensive microservices e-commerce platform showcasing modern cloud-native architecture with **5 deployment strategies**: Docker Compose, Kubernetes, Helm, ArgoCD, and Terraform.
 
-![Deployment Methods](https://img.shields.io/badge/Deployments-3-blue) ![Services](https://img.shields.io/badge/Services-8-green) ![Languages](https://img.shields.io/badge/Languages-5-orange) ![Databases](https://img.shields.io/badge/Databases-4-red)
+![Deployment Methods](https://img.shields.io/badge/Deployments-5-blue) ![Services](https://img.shields.io/badge/Services-8-green) ![Languages](https://img.shields.io/badge/Languages-5-orange) ![Databases](https://img.shields.io/badge/Databases-4-red)
 
 ---
 
@@ -18,6 +18,7 @@
   - [Kubernetes Manifests](#2-kubernetes-manifests)
   - [Helm Charts](#3-helm-charts)
   - [ArgoCD GitOps](#4-argocd-gitops)
+  - [Terraform Infrastructure](#5-terraform-infrastructure)
 - [Monitoring & Observability](#-monitoring--observability)
 - [Load Generation](#-load-generation)
 - [Configuration Reference](#-configuration-reference)
@@ -275,7 +276,7 @@ helm version
 
 ## 🚀 Deployment Methods
 
-The project supports **4 different deployment strategies**:
+The project supports **5 different deployment strategies**:
 
 ### 1. Docker Compose
 
@@ -598,6 +599,86 @@ argocd app diff robot-shop
 
 # Get detailed app status
 argocd app get robot-shop --refresh
+```
+
+---
+
+### 5. Terraform Infrastructure
+
+Best for: **Automated Azure infrastructure provisioning**, consistent staging/production environments, and reusable resource definitions.
+
+#### What Terraform deploys
+
+The Terraform configuration in `infra/terraform/` provisions the Azure infrastructure required for the Robot Shop stack, including:
+
+- Resource Group
+- Virtual Network and Subnets
+- Azure Kubernetes Service (AKS)
+- Azure Container Registry (ACR)
+- Azure SQL / MSSQL Server
+- Application Gateway
+- Key Vault
+- Log Analytics Workspace
+- NAT Gateway
+- Virtual Machine agent
+- VPN Gateway
+- DNS resources
+
+#### Project Structure
+
+```
+infra/terraform/
+├── main.tf
+├── provider.tf
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── provider.tf
+│   │   ├── terraform.tfvars
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   └── prod/
+└── modules/
+    ├── ACR/
+    ├── AKS/
+    ├── AppGw/
+    ├── DNS/
+    ├── KeyVault/
+    ├── LogAnalytics/
+    ├── MSSQL/
+    ├── NAT/
+    ├── Network/
+    ├── ResourceGroup/
+    ├── VM/
+    └── VPN/
+```
+
+#### Quick Start
+
+```bash
+cd infra/terraform
+terraform init
+terraform workspace select dev || terraform workspace new dev
+terraform plan -var-file=./environments/dev/terraform.tfvars
+terraform apply -var-file=./environments/dev/terraform.tfvars
+```
+
+#### Customize environment
+
+- Use `infra/terraform/environments/dev/terraform.tfvars` to change Azure resource names, CIDR ranges, AKS sizes, and service settings.
+- Create a new environment folder under `environments/` if needed.
+
+#### Notes
+
+- `provider.tf` configures the Azure RM provider and subscription.
+- `main.tf` references reusable modules for AKS, ACR, networking, database, and security.
+- `terraform.tfvars` contains environment-specific values such as resource group name, region, and VM configuration.
+- The AKS module depends on NAT and networking modules to provision a secure cluster environment.
+
+#### Cleanup
+
+```bash
+terraform destroy -var-file=./environments/dev/terraform.tfvars
 ```
 
 ---
