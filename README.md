@@ -1,4 +1,4 @@
-# 🤖 Robots Shop - Microservices Architecture Demo
+# 🤖 Robots Shop - Microservices Architecture
 
 > A comprehensive microservices e-commerce platform showcasing modern cloud-native architecture with **5 deployment strategies**: Docker Compose, Kubernetes, Helm, ArgoCD, and Terraform.
 
@@ -65,35 +65,59 @@
 ### System Components Diagram
 
 ```
-┌────────────────────────────────────────────────────────────────┐
-│                          Load Balancer                         │
-└────────────────────────┬─────────────────────────────────────┘
-                         │
-        ┌────────────────┼────────────────┐
-        │                │                │
-     ┌──▼──┐         ┌───▼───┐       ┌───▼────┐
-     │ Web │         │Catalog│       │ Cart   │
-     │(Nginx)        │(Node) │       │(Node)  │
-     └─────┘         └───┬───┘       └────┬───┘
-                         │                 │
-        ┌────────────────┼─────┬──────────┘
-        │                │     │
-     ┌──▼──┐         ┌───▼─┐ ┌▼────┐
-     │User │         │Pay  │ │Ratings
-     │(Node)         │(Py) │ │(PHP)
-     └─┬──┬┘         └──┬──┘ └──┬──┘
-       │  │             │       │
-   ┌───▼──▼─────────────┼───┬───▼──┐
-   │  Data Layer        │   │      │
-   │                    │   │      │
-   │ MongoDB  MySQL     │   │      │
-   │ Redis   RabbitMQ   │   │      │
-   └────────────────────┘   │      │
-                            │      │
-                         ┌──▼───┐ │
-                         │Dispatch
-                         │(Go)   │
-                         └───────┘
+                                         ┌───────────────────────┐
+                                         │     Load Balancer     │
+                                         │    (Ingress/Nginx)    │
+                                         └──────────┬────────────┘
+                                                    │
+                                                    ▼
+                                    ┌──────────────────────────┐
+                                    │        Web Service       │
+                                    │    Nginx + AngularJS     │
+                                    └──────────┬───────────────┘
+                                               │
+          ┌────────────────────────────────────┼───────────┬────────────────────────┐
+          │                                    │           │                        │
+          ▼                                    ▼           │                        ▼
+┌─────────────────────┐           ┌─────────────────────┐  │         ┌─────────────────────┐
+│  Catalogue Service  │           │     Cart Service    │  │         │     User Service    │
+│   Node.js + MongoDB │           │  Node.js + Redis    │  │         │ Node.js+Mongo+Redis │
+└──────────┬──────────┘           └──────────┬──────────┘  │         └──────────┬──────────┘
+           │                                 │             │                    │
+           │                                 │             │                    │
+           ▼                                 ▼             │                    ▼
+     ┌───────────┐                    ┌───────────┐        │            ┌───────────┐
+     │ MongoDB   │                    │   Redis   │        │            │ MongoDB   │
+     └───────────┘                    └───────────┘        │            └─────┬─────┘
+                                                           │                  │
+                                                           │                  ▼
+                                                           │             ┌───────────┐
+                                                           │             │   Redis   │
+                                                           │             └───────────┘
+                                                           │
+                                                           │
+                      ┌────────────────────────────────────┼────────────────────────────────────┐
+                      │                                    │                                    │
+                      ▼                                    ▼                                    ▼
+            ┌─────────────────────┐           ┌─────────────────────┐           ┌────────────────────┐
+            │   Payment Service   │           │   Shipping Service  │           │   Ratings Service  │
+            │    Python Flask     │           │  Java Spring Boot   │           │     PHP Service    │
+            │     + RabbitMQ      │           │      + MySQL        │           │  MySQL + Redis     │
+            └──────────┬──────────┘           └──────────┬──────────┘           └──────┬───────┬─────┘
+                       │                                 │                             │       │
+                       │                                 │                             │       │
+                       ▼                                 ▼                             ▼       ▼
+                  ┌───────────┐                    ┌───────────┐                 ┌────────┐ ┌────────┐
+                  │ RabbitMQ  │                    │   MySQL   │                 │ MySQL  │ │ Redis  │
+                  └─────┬─────┘                    └───────────┘                 └────────┘ └────────┘
+                        │
+                        ▼
+              ┌─────────────────────┐
+              │  Dispatch Service   │
+              │      Go Service     │
+              │     + RabbitMQ      │
+              └─────────────────────┘
+
 ```
 
 ### Microservices Overview
