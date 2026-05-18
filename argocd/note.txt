@@ -1,4 +1,5 @@
-# You should Create this secret first.
+# You should Create this secret first before monitoring-app.yaml
+# Please set your Password.
 
 kubectl create secret generic grafana-admin-secret \
   --from-literal=admin-user='admin' \
