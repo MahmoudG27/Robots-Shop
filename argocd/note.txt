@@ -3,5 +3,20 @@
 
 kubectl create secret generic grafana-admin-secret \
   --from-literal=admin-user='admin' \
-  --from-literal=admin-password='YourStrongPassword' \
+  --from-literal=admin-password='admin123' \
   --namespace monitoring
+
+
+# If you need it as a file.
+
+```
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-admin-secret
+  namespace: monitoring
+type: Opaque
+stringData:
+  admin-user: admin
+  admin-password: admin123
+```
