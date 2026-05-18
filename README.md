@@ -252,51 +252,42 @@ Robots-Shop/
 
 ---
 
-## 📋 Prerequisites
+## CI/CD Pipelines
 
-### System Requirements
-
-| Component | Minimum | Recommended |
-|-----------|---------|-------------|
-| **CPU** | 2 cores | 4+ cores |
-| **RAM** | 4 GB | 8+ GB |
-| **Disk** | 10 GB | 20+ GB |
-| **Network** | Standard | Gigabit |
-
-### Required Tools
-
-- **Docker** 20.10+ ([Install](https://docs.docker.com/install/))
-- **Docker Compose** 2.0+ ([Install](https://docs.docker.com/compose/install/))
-- **kubectl** 1.20+ ([Install](https://kubernetes.io/docs/tasks/tools/))
-- **Helm** 3.0+ ([Install](https://helm.sh/docs/intro/install/))
-- **Git** 2.0+ ([Install](https://git-scm.com/))
-
-### Optional Tools
-
-- **Minikube** or **kind** (Local Kubernetes)
-- **Azure CLI** (Azure AKS)
-- **Lens** (Kubernetes IDE)
-
-### Environment Setup
-
-```bash
-# Clone the repository
-git clone https://github.com/MahmoudG27/Robots-Shop.git
-cd Robots-Shop
-
-# Set permissions
-chmod +x load-gen/*.sh
-
-# Verify Docker installation
-docker --version
-docker-compose --version
-
-# Verify Kubernetes tools
-kubectl version --client
-helm version
-```
+This project includes three pipeline strategies, each representing a different deployment approach:
 
 ---
+
+### 1. `manifests.yml` — Direct Kubectl
+**Approach:** Build image → deploy directly with `kubectl set image`  
+**Use case:** Simple and fast, good for quick iterations  
+**Limitation:** No Helm templating, no GitOps, harder to rollback
+
+---
+
+### 2. `helm.yml` — Helm Deploy
+**Approach:** Build → Trivy security scan → Helm upgrade  
+**Use case:** Structured deployments with values management  
+**Key feature:** Pipeline fails if image has CRITICAL/HIGH CVEs  
+**Limitation:** CD is push-based (pipeline drives the deploy)
+
+---
+
+### 3. `helm-with-ArgoCD.yml` — GitOps (Recommended)
+**Approach:** Build → Trivy scan → update `values.yaml` → ArgoCD syncs  
+**Use case:** Production-grade GitOps pattern  
+**Key features:**
+- Git is the single source of truth
+- ArgoCD handles the actual deployment
+- Self-healing: any manual cluster change gets reverted automatically
+- Loop prevention: pipeline ignores commits made by `github-actions[bot]`
+
+> All three pipelines are `workflow_dispatch` by default to avoid 
+> cloud costs during development. The push trigger is commented out 
+> and ready to enable.
+
+---
+
 
 ## 🚀 Deployment Methods
 
@@ -875,13 +866,8 @@ For detailed configuration of all services, see [CONFIGURATION_REFERENCE.md](CON
 
 #### Database Credentials
 
-```
-MongoDB:  admin / admin123
-MySQL:    shipping / shipping123
-          ratings / ratings123
-RabbitMQ: guest / guest (docker-compose)
-          robotshop / S3cureP@ss! (Kubernetes)
-```
+Credentials are managed via Kubernetes Secrets.  
+For local development, see `infra/docker-compose/.env`.
 
 #### Service Ports
 

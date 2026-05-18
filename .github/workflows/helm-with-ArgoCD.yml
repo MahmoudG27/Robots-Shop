@@ -1,11 +1,13 @@
 name: CI - GitOps Robot Shop
 
 on:
-  # push:
-  #   branches: [ master ]
+  push:
+    branches: [ master ]
+    paths:
+      - 'services/**'
+      - '!infra/helm/**'
   workflow_dispatch:
   
-
 env:
   REGISTRY: containerregistryrobots.azurecr.io
 
@@ -71,12 +73,20 @@ jobs:
           tags: |
             ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
 
+      # -------- security scan --------
+      - name: Trivy Scan
+        if: steps.check.outputs.changed == 'true'
+        uses: aquasecurity/trivy-action@v0.20.0
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          severity: CRITICAL,HIGH
+          exit-code: 1
+
 # ---------------- UPDATE VALUES (GitOps) ----------------
   update-values:
     needs: build
     runs-on: ubuntu-latest
-
-    if: "!contains(github.event.head_commit.message, 'Update image tag')"
+    if: github.actor != 'github-actions[bot]'
 
     steps:
       - uses: actions/checkout@v3

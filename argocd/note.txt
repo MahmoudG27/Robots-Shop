@@ -1,0 +1,6 @@
+# You should Create this secret first.
+
+kubectl create secret generic grafana-admin-secret \
+  --from-literal=admin-user='admin' \
+  --from-literal=admin-password='YourStrongPassword' \
+  --namespace monitoring

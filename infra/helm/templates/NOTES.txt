@@ -1,0 +1,39 @@
+==========================================================
+  Robot Shop — Deployed Successfully
+==========================================================
+
+  Release  : {{ .Release.Name }}
+  Namespace: {{ .Release.Namespace }}
+  Image Tag: {{ .Values.global.imageTag }}
+
+----------------------------------------------------------
+  Services
+----------------------------------------------------------
+  Backend  : cart, catalogue, dispatch, payment,
+             ratings, shipping, user
+  Frontend : web
+  Databases: MongoDB {{ .Values.databases.mongodb.image.tag }},
+             MySQL {{ .Values.databases.mysql.image.tag }}
+  Cache    : Redis {{ .Values.cache.redis.image.tag }}
+  Messaging: RabbitMQ {{ .Values.messaging.rabbitmq.image.tag }}
+
+----------------------------------------------------------
+  Access
+----------------------------------------------------------
+{{- if .Values.ingress.enabled }}
+  Ingress is enabled ({{ .Values.ingress.className }})
+  Open: http://<your-ingress-ip>
+{{- else }}
+  Ingress is disabled. To access locally:
+
+  kubectl port-forward svc/web 8080:8080 -n {{ .Release.Namespace }}
+  Then open: http://localhost:8080
+{{- end }}
+
+----------------------------------------------------------
+  Monitoring (managed via ArgoCD)
+----------------------------------------------------------
+  kubectl port-forward svc/prometheus-grafana 3000:80 -n monitoring
+  Then open: http://localhost:3000
+
+==========================================================
