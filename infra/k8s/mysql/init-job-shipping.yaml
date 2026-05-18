@@ -36,7 +36,7 @@ spec:
           mysql -h${MYSQL_HOST} -P${MYSQL_PORT} -u root -p${MYSQL_ROOT_PASSWORD} <<EOF
           CREATE USER IF NOT EXISTS 'shipping'@'%' IDENTIFIED BY '${MYSQL_SHIPPING_PASSWORD}';
           GRANT ALL PRIVILEGES ON cities.* TO 'shipping'@'%';
-          CREATE USER 'exporter'@'%' IDENTIFIED BY 'exporter';
+          CREATE USER IF NOT EXISTS 'exporter'@'%' IDENTIFIED BY 'exporter';
           GRANT PROCESS, REPLICATION CLIENT, SELECT ON *.* TO 'exporter'@'%';
           FLUSH PRIVILEGES;
           EOF

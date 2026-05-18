@@ -8,7 +8,7 @@ services:
     environment:
       HOST: "http://web:8080"
       NUM_CLIENTS: "50"
-      RUN_TIME: "10m"
+      RUN_TIME: "30m"
       SILENT: "0"
       ERROR: "0"
     networks:

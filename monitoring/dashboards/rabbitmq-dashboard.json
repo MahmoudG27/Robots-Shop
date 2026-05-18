@@ -1,0 +1,107 @@
+{
+  "uid": "rabbitmq-prod",
+  "title": "RabbitMQ Dashboard",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "RabbitMQ Up",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "up{job=\"rabbitmq\"}"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active Connections",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rabbitmq_connections"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue Messages Ready",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queue_messages_ready) by (queue)",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue Consumers",
+      "gridPos": { "x": 0, "y": 10, "w": 6, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "sum(rabbitmq_queue_consumers) by (queue)",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Messages Published/Consumed",
+      "gridPos": { "x": 6, "y": 10, "w": 6, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(rabbitmq_messages_published_total[5m])",
+          "legendFormat": "published"
+        },
+        {
+          "expr": "rate(rabbitmq_messages_consumed_total[5m])",
+          "legendFormat": "consumed"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Channel Count",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rabbitmq_channels",
+          "legendFormat": "channels"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Queue Depth (messages)",
+      "gridPos": { "x": 0, "y": 22, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rabbitmq_queue_messages_total",
+          "legendFormat": "{{queue}}"
+        }
+      ]
+    }
+  ]
+}

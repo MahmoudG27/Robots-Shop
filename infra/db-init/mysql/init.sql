@@ -27,3 +27,107 @@ CREATE TABLE IF NOT EXISTS ratings (
   rating_count INT NOT NULL,
   PRIMARY KEY (sku)
 ) ENGINE=InnoDB;
+
+-- =============================
+-- SHIPPING / CITIES DB
+-- =============================
+
+USE cities;
+
+CREATE TABLE IF NOT EXISTS codes (
+id INT AUTO_INCREMENT PRIMARY KEY,
+code VARCHAR(2) NOT NULL,
+name VARCHAR(100) NOT NULL
+) ENGINE=InnoDB;
+
+
+CREATE TABLE IF NOT EXISTS cities (
+id INT AUTO_INCREMENT PRIMARY KEY,
+country_code VARCHAR(2) NOT NULL,
+city VARCHAR(100) NOT NULL,
+name VARCHAR(100) NOT NULL,
+region VARCHAR(10) NOT NULL,
+latitude DECIMAL(10,6) NOT NULL,
+longitude DECIMAL(10,6) NOT NULL
+) ENGINE=InnoDB;
+
+TRUNCATE TABLE codes;
+TRUNCATE TABLE cities;
+
+INSERT INTO codes (code, name) VALUES
+('eg', 'Egypt'),
+('sa', 'Saudi Arabia'),
+('ae', 'United Arab Emirates'),
+('kw', 'Kuwait'),
+('qa', 'Qatar'),
+('bh', 'Bahrain'),
+('om', 'Oman'),
+('jo', 'Jordan'),
+('lb', 'Lebanon'),
+('iq', 'Iraq'),
+('ma', 'Morocco'),
+('tn', 'Tunisia'),
+('dz', 'Algeria');
+
+INSERT INTO cities (
+country_code,
+city,
+name,
+region,
+latitude,
+longitude
+) VALUES
+
+-- Egypt
+('eg', 'cairo', 'Cairo', '01', 30.044419, 31.235711),
+('eg', 'alexandria', 'Alexandria', '02', 31.200092, 29.918739),
+('eg', 'giza', 'Giza', '03', 30.013056, 31.208853),
+('eg', 'mansoura', 'Mansoura', '04', 31.0409, 31.3785),
+('eg', 'aswan', 'Aswan', '05', 24.088938, 32.899829),
+('eg', 'luxor', 'Luxor', '06', 25.687243, 32.639637),
+('eg', 'hurghada', 'Hurghada', '07', 27.257896, 33.811607),
+
+-- Saudi Arabia
+('sa', 'riyadh', 'Riyadh', '01', 24.713552, 46.675296),
+('sa', 'jeddah', 'Jeddah', '02', 21.485811, 39.192505),
+('sa', 'dammam', 'Dammam', '03', 26.420694, 50.088792),
+('sa', 'mecca', 'Mecca', '04', 21.389082, 39.857912),
+('sa', 'medina', 'Medina', '05', 24.524654, 39.569184),
+
+-- UAE
+('ae', 'dubai', 'Dubai', '01', 25.204849, 55.270783),
+('ae', 'abu-dhabi', 'Abu Dhabi', '02', 24.453884, 54.377343),
+('ae', 'sharjah', 'Sharjah', '03', 25.346255, 55.420932),
+
+-- Kuwait
+('kw', 'kuwait-city', 'Kuwait City', '01', 29.375859, 47.977405),
+
+-- Qatar
+('qa', 'doha', 'Doha', '01', 25.285447, 51.531040),
+
+-- Bahrain
+('bh', 'manama', 'Manama', '01', 26.223504, 50.587593),
+
+-- Oman
+('om', 'muscat', 'Muscat', '01', 23.588030, 58.382871),
+
+-- Jordan
+('jo', 'amman', 'Amman', '01', 31.953949, 35.910635),
+('jo', 'aqaba', 'Aqaba', '02', 29.531919, 35.006084),
+
+-- Lebanon
+('lb', 'beirut', 'Beirut', '01', 33.893791, 35.501777),
+
+-- Iraq
+('iq', 'baghdad', 'Baghdad', '01', 33.315241, 44.366066),
+('iq', 'basra', 'Basra', '02', 30.508522, 47.783489),
+
+-- Morocco
+('ma', 'casablanca', 'Casablanca', '01', 33.573110, -7.589843),
+('ma', 'rabat', 'Rabat', '02', 34.020882, -6.841650),
+
+-- Tunisia
+('tn', 'tunis', 'Tunis', '01', 36.806496, 10.181532),
+
+-- Algeria
+('dz', 'algiers', 'Algiers', '01', 36.753769, 3.058756);

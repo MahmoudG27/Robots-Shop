@@ -1,0 +1,113 @@
+{
+  "uid": "redis-prod",
+  "title": "Redis Dashboard",
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "10s",
+  "templating": {
+    "list": [
+      {
+        "name": "DS_PROMETHEUS",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Prometheus",
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Redis Up",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "up{job=\"redis-exporter\"}"
+        }
+      ]
+    },
+    {
+      "type": "gauge",
+      "title": "Memory Usage %",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "redis_memory_used_bytes / redis_memory_max_bytes * 100"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "min": 0,
+          "max": 100
+        }
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory (bytes)",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "redis_memory_used_bytes",
+          "legendFormat": "used"
+        },
+        {
+          "expr": "redis_memory_max_bytes",
+          "legendFormat": "max"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Commands/sec",
+      "gridPos": { "x": 0, "y": 10, "w": 6, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(redis_commands_processed_total[5m])",
+          "legendFormat": "commands"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Connected Clients",
+      "gridPos": { "x": 6, "y": 10, "w": 6, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "redis_connected_clients",
+          "legendFormat": "clients"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Evicted Keys Rate",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "rate(redis_evicted_keys_total[5m])",
+          "legendFormat": "evicted"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Keyspace Keys",
+      "gridPos": { "x": 0, "y": 22, "w": 12, "h": 6 },
+      "datasource": "Prometheus",
+      "targets": [
+        {
+          "expr": "redis_db_keys",
+          "legendFormat": "db{{db}}"
+        }
+      ]
+    }
+  ]
+}
