@@ -164,8 +164,8 @@ module "AKS" {
   location            = module.ResourceGroup.resource_group_location
   aks_subnet_id       = module.Network.aks_subnet_id
 
-  acr_id                     = module.ACR.acr_id
-  appgw_id                   = module.AppGw.appgw_id
+  acr_id   = module.ACR.acr_id
+  appgw_id = module.AppGw.appgw_id
 
   environment = var.environment
 

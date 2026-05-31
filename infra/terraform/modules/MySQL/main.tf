@@ -7,7 +7,7 @@ resource "azurerm_mysql_flexible_server" "mysql_server" {
   location               = var.location
   sku_name               = var.mysql_sku
   version                = var.mysql_version
-  backup_retention_days = var.environment == "prod" ? 7 : 1
+  backup_retention_days  = var.environment == "prod" ? 7 : 1
   zone                   = "1"
   delegated_subnet_id    = var.mysql_subnet_id
   private_dns_zone_id    = azurerm_private_dns_zone.mysql_dns.id

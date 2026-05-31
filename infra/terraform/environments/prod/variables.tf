@@ -7,6 +7,10 @@ variable "subscription_id" {
   type = string
 }
 
+variable "tenant_id" {
+  type = string
+}
+
 #####################################
 
 # Resource Group Infra
@@ -100,10 +104,6 @@ variable "key_vault_sku" {
 
 variable "key_vault_soft_delete_retention_days" {
   type = number
-}
-
-variable "tenant_id" {
-  type = string
 }
 
 variable "key_vault_endpoint_name" {

@@ -1,8 +1,9 @@
 # This file contains the variables for the Azure infrastructure deployment.
 
 # This section defines the environment var. 
-environment = "prod"
+environment     = "prod"
 subscription_id = "1650eff4-9462-45fc-9432-0c58630eb89d"
+tenant_id       = "e12a260c-947a-40e3-a826-aa800e3bcc10"
 
 # This section defines the variables for the Resource Group
 resource_group_name     = "eTickets"
@@ -36,17 +37,17 @@ acr_private_dns_zone_name = "privatelink.azurecr.io"
 acr_endpoint_name         = "acr-endpoint"
 
 # This section defines the variables for the MySQL server.
-mysql_name          = "robots-shop-mysql-database"                # Must be globally unique
+mysql_name          = "robots-shop-mysql-database"           # Must be globally unique
 mysql_user          = "mysqladmin"                           # Admin username
 mysql_version       = "8.0.21"                               # MySQL version
-mysql_replica_name  = "robots-shop-mysql-replica"                 # Must be globally unique
+mysql_replica_name  = "robots-shop-mysql-replica"            # Must be globally unique
 mysql_sku           = "GP_Standard_D2ds_v4"                  # Compute tier
 mysql_dns_zone_name = "privatelink.mysql.database.azure.com" # DNS zone for private link
 
 # This section defines the variables for the Virtual Machine.
 agent_vm_name            = "agent-vm"        # Name of the VM
 agent_vm_size            = "Standard_D2s_v3" # VM compute size
-agent_vm_admin_username  = "mahmoud"         # Admin username
+agent_vm_admin_username  = "adminuser"       # Admin username
 agent_vm_computer_name   = "self-hosted-azure-devops-agent"
 agent_vm_os_disk_type    = "Standard_LRS" # Disk type - Premium_LRS, Standard_LRS, StandardSSD_LRS
 agent_vm_os_disk_size_gb = 30             # OS Disk size in GB
@@ -67,7 +68,6 @@ nat_gateway_name   = "aks-nat-gateway"
 key_vault_name                       = "mahmoudgeTickets" # The name must be globally unique
 key_vault_sku                        = "standard"         # standard and premium
 key_vault_soft_delete_retention_days = 7                  # This value can be between 7 and 90 (the default) days.
-tenant_id                            = "e12a260c-947a-40e3-a826-aa800e3bcc10"
 key_vault_endpoint_name              = "key-vault-endpoint"
 key_vault_private_dns_zone_name      = "privatelink.vaultcore.azure.net"
 
