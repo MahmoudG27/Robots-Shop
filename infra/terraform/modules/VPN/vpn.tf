@@ -17,7 +17,6 @@ resource "azurerm_virtual_network_gateway" "vpn_gw" {
   sku           = var.vpn_gateway_sku
   generation    = "Generation1"
   active_active = false
-  enable_bgp    = false
 
   ip_configuration {
     name                          = "vpngw-ipconfig"

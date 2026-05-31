@@ -3,7 +3,6 @@ resource "azurerm_application_gateway" "appgw" {
   location            = var.location
   resource_group_name = var.resource_group_name
 
-  enable_http2 = false
   fips_enabled = false
 
   sku {

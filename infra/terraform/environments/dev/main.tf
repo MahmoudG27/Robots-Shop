@@ -14,8 +14,8 @@ module "Network" {
   infra_subnet_address    = var.infra_subnet_address
   aks_subnet_name         = var.aks_subnet_name
   aks_subnet_address      = var.aks_subnet_address
-  mssql_subnet_name       = var.mssql_subnet_name
-  mssql_subnet_address    = var.mssql_subnet_address
+  mysql_subnet_name       = var.mysql_subnet_name
+  mysql_subnet_address    = var.mysql_subnet_address
   vpn_subnet_name         = var.vpn_subnet_name
   vpn_subnet_address      = var.vpn_subnet_address
   appgw_subnet_name       = var.appgw_subnet_name
@@ -43,23 +43,19 @@ module "ACR" {
   environment = var.environment
 }
 
-module "MSSQL" {
-  source        = "../../modules/MSSQL"
-  mssql_name    = var.mssql_name
-  mssql_user    = var.mssql_user
-  mssql_version = var.mssql_version
-
-  mssql_database_name      = var.mssql_database_name
-  mssql_database_collation = var.mssql_database_collation
-  mssql_database_sku       = var.mssql_database_sku
-
-  mssql_endpoint_name = var.mssql_endpoint_name
-  mssql_dns_zone_name = var.mssql_dns_zone_name
+module "MySQL" {
+  source              = "../../modules/MySQL"
+  mysql_name          = var.mysql_name
+  mysql_user          = var.mysql_user
+  mysql_version       = var.mysql_version
+  mysql_sku           = var.mysql_sku
+  mysql_replica_name  = var.mysql_replica_name
+  mysql_dns_zone_name = var.mysql_dns_zone_name
 
   resource_group_name = module.ResourceGroup.resource_group_name
   location            = module.ResourceGroup.resource_group_location
   virtual_network_id  = module.Network.virtual_network_id
-  mssql_subnet_id     = module.Network.mssql_subnet_id
+  mysql_subnet_id     = module.Network.mysql_subnet_id
 
   environment = var.environment
 }
@@ -137,15 +133,6 @@ module "KeyVault" {
   environment = var.environment
 }
 
-module "LAW" {
-  source = "../../modules/LogAnalytics"
-
-  resource_group_name = module.ResourceGroup.resource_group_name
-  location            = module.ResourceGroup.resource_group_location
-
-  environment = var.environment
-}
-
 module "AKS" {
   source           = "../../modules/AKS"
   aks_name         = var.aks_name
@@ -179,17 +166,8 @@ module "AKS" {
 
   acr_id                     = module.ACR.acr_id
   appgw_id                   = module.AppGw.appgw_id
-  log_analytics_workspace_id = module.LAW.log_analytics_workspace_id
 
   environment = var.environment
 
   depends_on = [module.NAT]
-}
-
-module "DNS" {
-  source              = "../../modules/DNS"
-  resource_group_name = module.ResourceGroup.resource_group_name
-  location            = module.ResourceGroup.resource_group_location
-
-  environment = var.environment
 }

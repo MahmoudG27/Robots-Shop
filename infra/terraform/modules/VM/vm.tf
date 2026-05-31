@@ -8,7 +8,7 @@ resource "azurerm_linux_virtual_machine" "agent_vm" {
   computer_name                   = var.agent_vm_computer_name
   disable_password_authentication = false
   network_interface_ids           = [azurerm_network_interface.agent_nic.id]
-  custom_data                     = base64encode(file("${path.module}/runner.sh"))
+  custom_data                     = base64encode(file("${path.module}/Install-Dependencies-Packages.sh"))
 
   os_disk {
     caching              = "ReadWrite"

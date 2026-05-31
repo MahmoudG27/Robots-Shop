@@ -33,11 +33,11 @@ variable "aks_subnet_address" {
   type = string
 }
 
-# MSSQL Subnet
-variable "mssql_subnet_name" {
+# MYSQL Subnet
+variable "mysql_subnet_name" {
   type = string
 }
-variable "mssql_subnet_address" {
+variable "mysql_subnet_address" {
   type = string
 }
 

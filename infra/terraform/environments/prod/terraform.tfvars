@@ -2,7 +2,7 @@
 
 # This section defines the environment var. 
 environment = "prod"
-
+subscription_id = "1650eff4-9462-45fc-9432-0c58630eb89d"
 
 # This section defines the variables for the Resource Group
 resource_group_name     = "eTickets"
@@ -18,8 +18,8 @@ aks_subnet_name      = "aks-subnet"
 aks_subnet_address   = "10.224.0.0/16"
 infra_subnet_name    = "infra-subnet"
 infra_subnet_address = "10.225.0.0/24"
-mssql_subnet_name    = "mssql-subnet"
-mssql_subnet_address = "10.225.2.0/24"
+mysql_subnet_name    = "mysql-subnet"
+mysql_subnet_address = "10.225.2.0/24"
 vpn_subnet_name      = "GatewaySubnet"
 vpn_subnet_address   = "10.225.3.0/24"
 appgw_subnet_name    = "appgw-subnet"
@@ -35,15 +35,13 @@ acr_sku                   = "Premium"                     # Options: Basic, Stan
 acr_private_dns_zone_name = "privatelink.azurecr.io"
 acr_endpoint_name         = "acr-endpoint"
 
-# This section defines the variables for the MSSQL server.
-mssql_name               = "eticketdbserver"              # Must be globally unique
-mssql_user               = "mahmoud"                      # Admin username
-mssql_version            = "12.0"                         # MSSQL database version
-mssql_database_name      = "eticket-db"                   # Name of the database
-mssql_database_collation = "SQL_Latin1_General_CP1_CI_AS" # Database collation
-mssql_database_sku       = "S0"                           # Data base SKU
-mssql_endpoint_name      = "mssql-endpoint"
-mssql_dns_zone_name      = "privatelink.database.windows.net" # DNS zone for private link
+# This section defines the variables for the MySQL server.
+mysql_name          = "robots-shop-mysql-database"                # Must be globally unique
+mysql_user          = "mysqladmin"                           # Admin username
+mysql_version       = "8.0.21"                               # MySQL version
+mysql_replica_name  = "robots-shop-mysql-replica"                 # Must be globally unique
+mysql_sku           = "GP_Standard_D2ds_v4"                  # Compute tier
+mysql_dns_zone_name = "privatelink.mysql.database.azure.com" # DNS zone for private link
 
 # This section defines the variables for the Virtual Machine.
 agent_vm_name            = "agent-vm"        # Name of the VM

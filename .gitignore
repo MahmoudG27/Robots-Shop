@@ -1,0 +1,16 @@
+# Terraform
+infra/terraform/environments/dev/.terraform/
+infra/terraform/environments/dev/.terraform.lock.hcl
+infra/terraform/environments/dev/terraform.tfvars
+infra/terraform/environments/dev/terraform.tfstate
+infra/terraform/environments/dev/terraform.tfstate.backup
+infra/terraform/environments/dev/*.tfstate*
+infra/terraform/environments/dev/.tfvars
+
+infra/terraform/environments/prod/.terraform/
+infra/terraform/environments/prod/.terraform.lock.hcl
+infra/terraform/environments/prod/terraform.tfvars
+infra/terraform/environments/prod/terraform.tfstate
+infra/terraform/environments/prod/terraform.tfstate.backup
+infra/terraform/environments/prod/*.tfstate*
+infra/terraform/environments/prod/.tfvars

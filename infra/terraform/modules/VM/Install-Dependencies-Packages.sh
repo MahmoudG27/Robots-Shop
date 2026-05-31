@@ -9,7 +9,7 @@ echo "========== Base packages =========="
 sudo apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https
 
 ####################################################################
-# Azure CLI (official script – safe to rerun)
+# Azure CLI
 ####################################################################
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 sudo apt-get update
@@ -84,26 +84,3 @@ curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --
 echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update
 sudo apt-get install helm
-
-####################################################################
-# .NET SDK and SQL tools
-####################################################################
-
-# Add required dependencies
-sudo apt-get update
-sudo snap install dotnet-sdk --classic --channel=7.0
-sudo snap alias dotnet-sdk.dotnet dotnet
-# Install Entity Framework Core tools globally
-dotnet tool install --global dotnet-ef --version 7.0.3
-
-
-# install Azure SQL tools on linux VM
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
-sudo apt-get update
-sudo ACCEPT_EULA=Y apt-get install msodbcsql18
-sudo ACCEPT_EULA=Y apt-get install mssql-tools18
-echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> /home/mahmoud/.bashrc
-source /home/mahmoud/.bashrc
-
-# sqlcmd -S eticketdbserver.database.windows.net -d eticket-db -U mahmoud -P yourpassword -N

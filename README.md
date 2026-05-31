@@ -630,7 +630,7 @@ The Terraform configuration in `infra/terraform/` provisions the Azure infrastru
 - Virtual Network and Subnets
 - Azure Kubernetes Service (AKS)
 - Azure Container Registry (ACR)
-- Azure SQL / MSSQL Server
+- Azure Flexible MySQL Server
 - Application Gateway
 - Key Vault
 - Log Analytics Workspace
@@ -657,10 +657,8 @@ infra/terraform/
     ├── ACR/
     ├── AKS/
     ├── AppGw/
-    ├── DNS/
     ├── KeyVault/
-    ├── LogAnalytics/
-    ├── MSSQL/
+    ├── MySQL/
     ├── NAT/
     ├── Network/
     ├── ResourceGroup/

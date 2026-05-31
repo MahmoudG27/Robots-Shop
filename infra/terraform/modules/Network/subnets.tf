@@ -12,11 +12,23 @@ resource "azurerm_subnet" "aks_subnet" {
   address_prefixes     = [var.aks_subnet_address]
 }
 
-resource "azurerm_subnet" "mssql_subnet" {
-  name                 = var.mssql_subnet_name
+resource "azurerm_subnet" "mysql_subnet" {
+  name                 = var.mysql_subnet_name
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.project_vnet.name
-  address_prefixes     = [var.mssql_subnet_address]
+  address_prefixes     = [var.mysql_subnet_address]
+
+  depends_on = [azurerm_subnet.aks_subnet]
+
+  delegation {
+    name = "delegation"
+    service_delegation {
+      name = "Microsoft.DBforMySQL/flexibleServers"
+      actions = [
+        "Microsoft.Network/virtualNetworks/subnets/join/action",
+      ]
+    }
+  }
 }
 
 resource "azurerm_subnet" "vpn_subnet" {

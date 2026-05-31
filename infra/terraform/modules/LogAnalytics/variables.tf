@@ -1,9 +1,0 @@
-# inheritance from root module
-variable "resource_group_name" {}
-variable "location" {}
-
-variable "environment" {
-  type = string
-}
-
-################################

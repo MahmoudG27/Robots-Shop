@@ -5,7 +5,6 @@ variable "aks_subnet_id" {}
 
 variable "acr_id" {}
 variable "appgw_id" {}
-variable "log_analytics_workspace_id" {}
 
 variable "environment" {
   type = string

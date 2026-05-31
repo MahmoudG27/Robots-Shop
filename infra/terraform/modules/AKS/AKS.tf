@@ -96,11 +96,6 @@ resource "azurerm_kubernetes_cluster" "aks" {
     interval    = 1
   }
 
-  oms_agent {
-    log_analytics_workspace_id      = var.log_analytics_workspace_id
-    msi_auth_for_monitoring_enabled = true
-  }
-
   # key_vault_secrets_provider {
   #   secret_identity          = [
   #     {

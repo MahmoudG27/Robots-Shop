@@ -3,6 +3,10 @@ variable "environment" {
   type = string
 }
 
+variable "subscription_id" {
+  type = string
+}
+
 #####################################
 
 # Resource Group Infra
@@ -40,11 +44,11 @@ variable "aks_subnet_address" {
   type = string
 }
 
-# MSSQL Server Subnet
-variable "mssql_subnet_name" {
+# MYSQL Server Subnet
+variable "mysql_subnet_name" {
   type = string
 }
-variable "mssql_subnet_address" {
+variable "mysql_subnet_address" {
   type = string
 }
 
@@ -112,40 +116,33 @@ variable "key_vault_private_dns_zone_name" {
 
 #####################################
 
-# MSSQL Server
-variable "mssql_name" {
+# Flexible MySQL Server
+variable "mysql_name" {
   type = string
 }
-variable "mssql_user" {
+variable "mysql_user" {
   type = string
 }
-variable "mssql_version" {
+variable "mysql_version" {
   type = string
 }
-
-# MSSQL Database
-variable "mssql_database_name" {
-  type = string
-}
-variable "mssql_database_sku" {
-  type = string
-}
-variable "mssql_database_collation" {
+variable "mysql_sku" {
   type = string
 }
 
-# MSSQL Private EndPoint
-variable "mssql_endpoint_name" {
+# Replica MySQL Server
+variable "mysql_replica_name" {
   type = string
 }
 
-variable "mssql_dns_zone_name" {
+# DNS for MySQL server
+variable "mysql_dns_zone_name" {
   type = string
 }
 
 #####################################
 
-# Azure DevOps Agent
+# Runner VM
 variable "agent_vm_name" {
   type = string
 }

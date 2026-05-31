@@ -16,9 +16,9 @@ output "aks_subnet_id" {
   value = azurerm_subnet.aks_subnet.id
 }
 
-# MSSQL Subnet id
-output "mssql_subnet_id" {
-  value = azurerm_subnet.mssql_subnet.id
+# MYSQL Subnet id
+output "mysql_subnet_id" {
+  value = azurerm_subnet.mysql_subnet.id
 }
 
 # VPN Subnet id
