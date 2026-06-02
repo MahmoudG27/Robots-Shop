@@ -8,9 +8,11 @@ sudo apt-get upgrade -y
 echo "========== Base packages =========="
 sudo apt-get install -y ca-certificates curl gnupg lsb-release apt-transport-https
 
+
 ####################################################################
 # Azure CLI
 ####################################################################
+
 curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 sudo apt-get update
 sudo apt-get install apt-transport-https ca-certificates curl gnupg lsb-release
@@ -27,9 +29,11 @@ Signed-by: /etc/apt/keyrings/microsoft.gpg" | sudo tee /etc/apt/sources.list.d/a
 sudo apt-get update
 sudo apt-get install azure-cli
 
+
 ####################################################################
 # kubectl (binary install – best for private/VPN environments)
 ####################################################################
+
 sudo apt-get update
 sudo apt-get install -y apt-transport-https ca-certificates curl gnupg
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.35/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
@@ -39,9 +43,9 @@ sudo chmod 644 /etc/apt/sources.list.d/kubernetes.list
 sudo apt-get update
 sudo apt-get install -y kubectl
 
-####################################################################
+
 # kubectl bash completion
-####################################################################
+
 if ! grep -q "__start_kubectl" ~/.bashrc; then
   echo "========== Enabling kubectl bash completion =========="
   {
@@ -51,9 +55,11 @@ if ! grep -q "__start_kubectl" ~/.bashrc; then
   } >> /home/mahmoud/.bashrc
 fi
 
+
 ####################################################################
 # Docker
 ####################################################################
+
 sudo apt remove -y $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
 # Add Docker's official GPG key:
 sudo apt update
@@ -79,8 +85,18 @@ sudo usermod -aG docker mahmoud
 ####################################################################
 # Helm
 ####################################################################
+
 sudo apt-get install curl gpg apt-transport-https --yes
 curl -fsSL https://packages.buildkite.com/helm-linux/helm-debian/gpgkey | gpg --dearmor | sudo tee /usr/share/keyrings/helm.gpg > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/helm.gpg] https://packages.buildkite.com/helm-linux/helm-debian/any/ any main" | sudo tee /etc/apt/sources.list.d/helm-stable-debian.list
 sudo apt-get update
 sudo apt-get install helm
+
+
+####################################################################
+# ArgoCD cli
+####################################################################
+
+curl -sSL -o argocd-linux-amd64 https://github.com/argoproj/argo-cd/releases/latest/download/argocd-linux-amd64
+sudo install -m 555 argocd-linux-amd64 /usr/local/bin/argocd
+rm argocd-linux-amd64
