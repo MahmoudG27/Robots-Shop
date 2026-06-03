@@ -23,4 +23,9 @@ resource "azurerm_linux_virtual_machine" "agent_vm" {
     sku       = "server"
     version   = "latest"
   }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.github_runner.id]
+  }
 }

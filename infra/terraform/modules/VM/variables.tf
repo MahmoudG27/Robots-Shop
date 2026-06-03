@@ -3,6 +3,7 @@ variable "resource_group_name" {}
 variable "location" {}
 
 variable "infra_subnet_id" {}
+variable "acr_id" {}
 
 variable "environment" {
   type = string

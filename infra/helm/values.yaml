@@ -1,12 +1,13 @@
 global:
   namespace: default
   imageTag: latest
+  registry: mgrobotsshopcontainerregistry.azurecr.io
 
 ingress:
   enabled: true
-  className: nginx         # azure-application-gateway
+  className: azure-application-gateway    # nginx
 
-storageClassName: standard  # default or managed-csi
+storageClassName: managed-csi             # standard
 
 services:
   defaults:
@@ -50,7 +51,7 @@ services:
 
   cart:
     replicas: 2
-    image: containerregistryrobots.azurecr.io/cart
+    image: cart
     tag: v1.0.0
 
     env:
@@ -65,7 +66,7 @@ services:
       enabled: true
 
   catalogue:
-    image: containerregistryrobots.azurecr.io/catalogue
+    image: catalogue
     tag: v1.0.0
 
     env:
@@ -89,7 +90,7 @@ services:
       enabled: true
 
   dispatch:
-    image: containerregistryrobots.azurecr.io/dispatch
+    image: dispatch
     tag: v1.0.0
 
     env:
@@ -103,7 +104,7 @@ services:
       enabled: false
 
   payment:
-    image: containerregistryrobots.azurecr.io/payment
+    image: payment
     tag: v1.0.0
 
     env:
@@ -129,7 +130,7 @@ services:
       enabled: false
 
   ratings:
-    image: containerregistryrobots.azurecr.io/ratings
+    image: ratings
     tag: v1.0.0
     ports:
     - name: http
@@ -176,7 +177,7 @@ services:
       readinessPath: /actuator/health/readiness
       startupInitialDelaySeconds: 30
 
-    image: containerregistryrobots.azurecr.io/shipping
+    image: shipping
     tag: v1.0.0
 
     env:
@@ -201,7 +202,7 @@ services:
       enabled: true
 
   user:
-    image: containerregistryrobots.azurecr.io/user
+    image: user
     tag: v1.0.0
 
     env:
@@ -227,7 +228,7 @@ services:
 
 web:
   replicas: 2
-  image: containerregistryrobots.azurecr.io/web
+  image: web
   tag: v1.0.0
   ports:
     - name: http

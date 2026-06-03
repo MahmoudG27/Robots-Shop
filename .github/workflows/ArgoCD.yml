@@ -7,15 +7,18 @@ on:
       - 'services/**'
       - '!infra/helm/**'
   workflow_dispatch:
-  
+
 env:
-  REGISTRY: containerregistryrobots.azurecr.io
+  REGISTRY: mgrobotsshopcontainerregistry.azurecr.io
 
 jobs:
 
 # ---------------- DETECT CHANGES ----------------
   detect:
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux
+      - aks-private
     outputs:
       services: ${{ steps.filter.outputs.changes }}
 
@@ -35,10 +38,13 @@ jobs:
             dispatch: services/dispatch/**
             web: services/web/**
 
-# ---------------- BUILD + PUSH ----------------
+# ---------------- BUILD + UPDATE + PUSH ----------------
   build:
     needs: detect
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - linux
+      - aks-private
     if: needs.detect.outputs.services != ''
 
     strategy:
@@ -56,9 +62,7 @@ jobs:
 
       - name: Login to ACR
         if: steps.check.outputs.changed == 'true'
-        run: |
-          echo "${{ secrets.ACR_PASSWORD }}" | docker login $REGISTRY \
-          -u "${{ secrets.ACR_USERNAME }}" --password-stdin
+        run: az acr login --name mgrobotsshopcontainerregistry
 
       - name: Setup Buildx
         if: steps.check.outputs.changed == 'true'
@@ -70,10 +74,8 @@ jobs:
         with:
           context: ./services/${{ matrix.service }}
           push: true
-          tags: |
-            ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ matrix.service }}:${{ github.sha }}
 
-      # -------- security scan --------
       - name: Trivy Scan
         if: steps.check.outputs.changed == 'true'
         uses: aquasecurity/trivy-action@v0.20.0
@@ -82,28 +84,34 @@ jobs:
           severity: CRITICAL,HIGH
           exit-code: 1
 
-# ---------------- UPDATE VALUES (GitOps) ----------------
-  update-values:
-    needs: build
-    runs-on: ubuntu-latest
-    if: github.actor != 'github-actions[bot]'
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install yq
-        run: sudo snap install yq
-
       - name: Update image tag in values.yaml
+        if: steps.check.outputs.changed == 'true'
+        env:
+          SERVICE: ${{ matrix.service }}
+          SHA: ${{ github.sha }}
         run: |
-          yq -i '.global.imageTag = "${{ github.sha }}"' infra/helm/values.yaml
+          which yq || sudo snap install yq
+
+          if [ "$SERVICE" = "web" ]; then
+            yq -i ".web.tag = \"$SHA\"" infra/helm/values.yaml
+          else
+            yq -i ".services.$SERVICE.tag = \"$SHA\"" infra/helm/values.yaml
+          fi
 
       - name: Commit & Push
+        if: steps.check.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
+          git config user.name "Mahmoud Gamal"
+          git config user.email "mahmoudgamal2727@gmail.com"
+          
+          # Set remote URL with token
+          git remote set-url origin https://x-access-token:${GH_TOKEN}@github.com/MahmoudG27/Robots-Shop.git
 
-          git add infra/helm/values.yaml
-          git commit -m "Update image tag to ${{ github.sha }}" || echo "No changes"
-
-          git push
+          for i in 1 2 3; do
+            git pull --rebase origin master
+            git add infra/helm/values.yaml
+            git commit -m "Update ${{ matrix.service }} tag to ${{ github.sha }}" || echo "No changes"
+            git push && break || sleep $((i * 5))
+          done

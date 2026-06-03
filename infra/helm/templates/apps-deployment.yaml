@@ -27,7 +27,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
         - name: {{ $name }}
-          image: "{{ $mergedSvc.image }}:{{ $mergedSvc.tag | default $.Values.global.imageTag }}"
+          image: "{{ $.Values.global.registry }}/{{ $mergedSvc.image }}:{{ $mergedSvc.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
             {{- range $p := $mergedSvc.ports }}

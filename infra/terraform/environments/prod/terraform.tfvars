@@ -6,7 +6,7 @@ subscription_id = "1650eff4-9462-45fc-9432-0c58630eb89d"
 tenant_id       = "e12a260c-947a-40e3-a826-aa800e3bcc10"
 
 # This section defines the variables for the Resource Group
-resource_group_name     = "eTickets"
+resource_group_name     = "Robots-Shop"
 resource_group_location = "North Europe"
 
 
@@ -31,8 +31,8 @@ appgw_name    = "aks-appgw"
 appgw_ip_name = "pip-appgw"
 
 # This section defines the variables for the Azure Container Registry (ACR).
-acr_name                  = "mgcontainerregistryetickets" # Must be globally unique
-acr_sku                   = "Premium"                     # Options: Basic, Standard, Premium
+acr_name                  = "mgrobotsshopcontainerregistry" # Must be globally unique
+acr_sku                   = "Premium"                       # Options: Basic, Standard, Premium
 acr_private_dns_zone_name = "privatelink.azurecr.io"
 acr_endpoint_name         = "acr-endpoint"
 
@@ -45,13 +45,13 @@ mysql_sku           = "GP_Standard_D2ds_v4"                  # Compute tier
 mysql_dns_zone_name = "privatelink.mysql.database.azure.com" # DNS zone for private link
 
 # This section defines the variables for the Virtual Machine.
-agent_vm_name            = "agent-vm"        # Name of the VM
+agent_vm_name            = "runner"        # Name of the VM
 agent_vm_size            = "Standard_D2s_v3" # VM compute size
 agent_vm_admin_username  = "adminuser"       # Admin username
-agent_vm_computer_name   = "self-hosted-azure-devops-agent"
+agent_vm_computer_name   = "github-runner"
 agent_vm_os_disk_type    = "Standard_LRS" # Disk type - Premium_LRS, Standard_LRS, StandardSSD_LRS
 agent_vm_os_disk_size_gb = 30             # OS Disk size in GB
-agent_nic_name           = "agent-nic"
+agent_nic_name           = "runner-nic"
 agent_nic_private_ip     = "10.225.0.70" # Static private IP for the VM
 
 # This section defines the variables for VPN (Point-to-Site)

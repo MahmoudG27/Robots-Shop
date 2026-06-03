@@ -74,6 +74,7 @@ module "VirtualMachine" {
   resource_group_name = module.ResourceGroup.resource_group_name
   location            = module.ResourceGroup.resource_group_location
   infra_subnet_id     = module.Network.infra_subnet_id
+  acr_id   = module.ACR.acr_id
 
   environment = var.environment
 }

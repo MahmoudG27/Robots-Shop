@@ -331,7 +331,7 @@ Customize deployment via `docker-compose/.env`:
 
 ```bash
 # Image registry
-IMAGE_REGISTRY=containerregistryrobots.azurecr.io
+IMAGE_REGISTRY=mgrobotsshopcontainerregistry.azurecr.io
 IMAGE_TAG=v1.0.0
 
 # Database credentials

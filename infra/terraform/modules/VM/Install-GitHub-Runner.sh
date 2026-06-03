@@ -8,7 +8,7 @@ GITHUB_REPO="Robots-Shop"
 RUNNER_TOKEN="YOUR_REGISTRATION_TOKEN"
 
 RUNNER_NAME="$(hostname)"
-RUNNER_LABELS="linux,self-hosted"
+RUNNER_LABELS="linux,self-hosted,aks-private"
 
 # Runner Configuration
 RUNNER_VERSION="2.334.0"
